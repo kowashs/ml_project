@@ -1,48 +1,48 @@
 This is BibTeX, Version 0.99d (TeX Live 2018/Arch Linux)
 Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
 The top-level auxiliary file: proposal.aux
-The style file: plain.bst
+The style file: plainnat.bst
 Database file #1: proposal.bib
 Warning--empty journal in ngram-cat
 You've used 3 entries,
-            2118 wiz_defined-function locations,
-            513 strings with 4384 characters,
-and the built_in function-call counts, 755 in all, are:
-= -- 68
-> -- 33
-< -- 0
-+ -- 15
-- -- 10
-* -- 39
-:= -- 135
-add.period$ -- 9
+            2773 wiz_defined-function locations,
+            610 strings with 5321 characters,
+and the built_in function-call counts, 1122 in all, are:
+= -- 98
+> -- 52
+< -- 3
++ -- 18
+- -- 15
+* -- 72
+:= -- 178
+add.period$ -- 11
 call.type$ -- 3
 change.case$ -- 14
-chr.to.int$ -- 0
-cite$ -- 4
-duplicate$ -- 32
-empty$ -- 68
-format.name$ -- 10
-if$ -- 156
-int.to.chr$ -- 0
-int.to.str$ -- 3
+chr.to.int$ -- 3
+cite$ -- 7
+duplicate$ -- 58
+empty$ -- 103
+format.name$ -- 22
+if$ -- 235
+int.to.chr$ -- 1
+int.to.str$ -- 1
 missing$ -- 2
-newline$ -- 17
-num.names$ -- 6
-pop$ -- 24
+newline$ -- 24
+num.names$ -- 12
+pop$ -- 36
 preamble$ -- 1
 purify$ -- 11
 quote$ -- 0
-skip$ -- 22
+skip$ -- 43
 stack$ -- 0
-substring$ -- 17
-swap$ -- 2
+substring$ -- 6
+swap$ -- 4
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 12
+type$ -- 33
 warning$ -- 1
-while$ -- 6
-width$ -- 4
-write$ -- 31
+while$ -- 9
+width$ -- 0
+write$ -- 46
 (There was 1 warning)

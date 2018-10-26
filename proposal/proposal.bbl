@@ -1,18 +1,25 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{3}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
-\bibitem{textclass}
+\bibitem[Aggarwal and Zhai(2012)]{textclass}
 Charu~C. Aggarwal and ChengXiang Zhai.
 \newblock A survey of text classification algorithms.
-\newblock In {\em Mining Text Data}. Springer, Boston, Massachusetts, 2012.
+\newblock In \emph{Mining Text Data}. Springer, Boston, Massachusetts, 2012.
+\newblock URL \url{https://doi.org/10.1007/978-1-4614-3223-4_6}.
 
-\bibitem{ngram-cat}
+\bibitem[Cavnar and Trenkle(2001)]{ngram-cat}
 William Cavnar and John Trenkle.
 \newblock N-gram-based text categorization.
 \newblock 05 2001.
 
-\bibitem{rnn-effect}
+\bibitem[Karpathy(2015)]{rnn-effect}
 Andrej Karpathy.
 \newblock The unreasonable effectiveness of recurrent neural networks, May
   2015.
+\newblock URL \url{http://karpathy.github.io/2015/05/21/rnn-effectiveness/}.
 
 \end{thebibliography}
