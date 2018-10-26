@@ -1,0 +1,37 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,color}
+
+\title{arXiv or snarXiv?}
+\author{Samuel Kowash, Tyler Blanton}
+\date{October 25, 2018}
+
+\begin{document}
+
+\maketitle
+The arXiv is a free online repository of preprints of scientific papers (many of which are also published in scientific journals) from fields such as mathematics, physics, and computer science.
+Submissions are moderated to ensure only legitimate papers are posted, making it an extremely valuable resource for scientists in many disciplines.
+% contains over a million papers (many of which are also published in scientific journals).
+
+The snarXiv is a computer program created by David Simmons-Duffin that randomly generates titles and abstracts for high-energy theoretical physics (HEP-th) papers.
+He used it make the game ``arXiv vs. snarXiv," in which readers are presented with two title/abstract pairs -- one from the HEP-th sector of arXiv, the other generated with snarXiv -- and are asked to choose which one is real.
+After 750,000 guesses, the success rate was only 59\%; i.e., people mistakenly chose the randomly generated snarXiv title/abstract to be the real one 41\% of the time, which is pretty remarkable (and amusing).
+
+Our goal is to use machine learning techniques to write a program that accurately classifies HEP-th title/abstract pairs as being real (arXiv) or fake (snarXiv).
+The arXiv has an API%
+\footnote{https://arxiv.org/help/api/index}
+for downloading text samples, and Simmons-Duffin has made his snarXiv code available on github.%
+\footnote{https://github.com/davidsd/snarxiv}
+%
+
+
+
+
+Depending on how things go, we may try to add viXra to the mix.
+viXra is like arXiv except that all submissions are accepted, which is why a significant percentage of its papers are low-quality and/or factually inaccurate.
+As far as we know there is no API for viXra though, so getting data from it may not be worth the effort.
+
+
+Supervised learning: logistic regression, support vector machine, 
+
+\end{document}
