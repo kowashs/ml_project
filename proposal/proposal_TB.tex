@@ -1,42 +1,96 @@
-\documentclass{article}
+\documentclass[11pt,letterpaper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage{amsmath,amsfonts,color}
+\usepackage[top=1in,bottom=1in,left=1in,right=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{braket}
+\usepackage{cancel}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{mathabx}
+\usepackage{parskip}
+\usepackage{tensor}
+\usepackage{titlesec}
+\usepackage{titling}
 
-\title{arXiv or snarXiv?}
-\author{Samuel Kowash, Tyler Blanton}
-\date{October 25, 2018}
+
+\setenumerate{leftmargin=*,label=\bf(\alph*)}
+
+
+\titlelabel{(\thetitle)\quad}
+\titleformat*{\section}{\large\bfseries}
+\titleformat*{\subsection}{\normalsize\bfseries}
+\setlength{\droptitle}{-5em}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\let\Re\relax
+\DeclareMathOperator{\Re}{Re}
+\let\Im\relax
+\DeclareMathOperator{\Im}{Im}
+
+\DeclareMathOperator{\sgn}{sgn}
+
+
+\newcommand{\bhat}[1]{\hat{\bm{#1}}}
+
+
+\renewcommand{\thesubsection}{\normalsize \alph{subsection}}
+\renewcommand{\d}{\mathrm{d}}
+\renewcommand{\vec}[1]{\bm{#1}}
+\newcommand{\del}{\vec{\nabla}}
+\newcommand{\e}{\epsilon}
+\newcommand{\tpd}[3]{\left( \frac{\partial #1}{\partial #2} \right)_{#3}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\spd}[2]{\frac{\partial^2 #1}{\partial {#2}^2}}
+\def\dbar{{\mathchar'26\mkern-12mu d}}
+
+\allowdisplaybreaks
+
+
+\author{Tyler Blanton \quad Sam Kowash}
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\title{CSE 546 Project Proposal: arXiv or snarXiv?}
 
 \begin{document}
 
 \maketitle
-The arXiv is a free online repository of preprints of scientific papers (many of which are also published in scientific journals) from fields such as mathematics, physics, and computer science.
-Submissions are moderated to ensure only legitimate papers are posted, making it an extremely valuable resource for scientists in many disciplines.
-% contains over a million papers (many of which are also published in scientific journals).
+The arXiv is a free online repository maintained by Cornell for preprints of scientific papers (many of which go on to be published in journals) from fields such as mathematics, physics, and computer science.
+Submissions are moderated via an endorsement system to ensure that only legitimate papers are posted, making it a valuable resource for scientists in many disciplines. In many areas of theoretical physics, almost all new papers are posted to the arXiv before publication.
 
-The snarXiv is a computer program created by David Simmons-Duffin that randomly generates titles and abstracts for high-energy theoretical physics (HEP-th) papers.
-He used it make the game ``arXiv vs. snarXiv," in which readers are presented with two title/abstract pairs -- one from the HEP-th sector of arXiv, the other generated with snarXiv -- and are asked to choose which one is real.
+The snarXiv is a computer program created by physicist David Simmons-Duffin that generates titles and abstracts in the style of arXiv's \texttt{hep-th} section using a context-free grammar.
+Simmons-Duffin created a game, ``arXiv vs. snarXiv,'' in which readers are presented with two title/abstract pairs -- one from \texttt{hep-th}, the other generated with snarXiv -- and are asked to choose which one is real.
 After 750,000 guesses, the success rate was only 59\%; i.e., people mistakenly chose the randomly generated snarXiv title/abstract to be the real one 41\% of the time, which is pretty remarkable (and amusing).
 
-Our goal is to use machine learning techniques to write a program that accurately classifies HEP-th title/abstract pairs as being real (arXiv) or fake (snarXiv).
-We would like to explore how different learning algorithms perform; for example, we predict that sequence models like convolutional neural networks will outperform n-gram models like logistic regression due to the grammatical syntax that snarXiv uses, and we would like to test this.
+Our goal is to use machine learning techniques to write a program that accurately classifies \texttt{hep-th} title/abstract pairs as real (arXiv) or fake (snarXiv).
+The arXiv has an API%
+\footnote{\url{https://arxiv.org/help/api/index}}
+for downloading metadata (including titles and abstracts), and Simmons-Duffin has made his snarXiv code available on GitHub\footnote{\url{https://github.com/davidsd/snarxiv}}, so we can sample large data sets from it.
+%
+
+We think this poses an interesting classification problem, as each corpus follows a relatively constrained syntax --- arXiv the conventions of academic writing, and snarXiv the grammar constructed to parody those conventions --- but one carries semantic cargo while the other is senseless. Discriminating between them can be difficult for humans, including (based on an informal survey of nearby offices\ldots) those with substantial domain knowledge.
+
+Our plan is to explore a variety of methods.
+We would like to explore how different learning algorithms perform; for example, we predict that sequence models like recurrent neural networks will outperform $n$-gram models due to the grammatical syntax that snarXiv uses, and we would like to test this.
 Although the scope our project is restricted to the admittedly impractical field of faux physics literature, the problem of distinguishing real vs. simulated writing does have real-world applications such as spam-filtering. 
 
 
-The arXiv has an API%
-\footnote{https://arxiv.org/help/api/index}
-for downloading text samples, and Simmons-Duffin has made his snarXiv code available on github.%
-\footnote{https://github.com/davidsd/snarxiv}
-%
+By the project milestone, we will have calculated the classification accuracy for at least one method, and hopefully two: one $n$-gram model and one sequence model.
 
+%Depending on how things go, we may try to add viXra to the mix.
+%viXra is like arXiv except that all submissions are accepted, and consequently a significant percentage of its papers are low-quality and/or factually inaccurate.
+%As far as we know there is no API for viXra though, so getting data from it may not be worth the effort.
 
-
-
-
-Depending on how things go, we may try to add viXra to the mix.
-viXra is like arXiv except that all submissions are accepted, which is why a significant percentage of its papers are low-quality and/or factually inaccurate.
-As far as we know there is no API for viXra though, so getting data from it may not be worth the effort.
-
-
-Supervised learning: logistic regression, support vector machine, 
+Sources:\\
+\url{http://karpathy.github.io/2015/05/21/rnn-effectiveness/}\\
+\url{https://doi.org/10.1007/978-1-4614-3223-4_6}\\
+\url{http://odur.let.rug.nl/vannoord/TextCat/textcat.pdf}
 
 \end{document}
