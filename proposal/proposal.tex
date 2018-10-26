@@ -1,0 +1,70 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[top=1in,bottom=1in,left=1in,right=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{braket}
+\usepackage{cancel}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{mathabx}
+\usepackage{parskip}
+\usepackage{tensor}
+\usepackage{titlesec}
+\usepackage{titling}
+
+
+\setenumerate{leftmargin=*,label=\bf(\alph*)}
+
+
+\titlelabel{(\thetitle)\quad}
+\titleformat*{\section}{\large\bfseries}
+\titleformat*{\subsection}{\normalsize\bfseries}
+\setlength{\droptitle}{-5em}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\let\Re\relax
+\DeclareMathOperator{\Re}{Re}
+\let\Im\relax
+\DeclareMathOperator{\Im}{Im}
+
+\DeclareMathOperator{\sgn}{sgn}
+
+
+\newcommand{\bhat}[1]{\hat{\bm{#1}}}
+
+
+\renewcommand{\thesubsection}{\normalsize \alph{subsection}}
+\renewcommand{\d}{\mathrm{d}}
+\renewcommand{\vec}[1]{\bm{#1}}
+\newcommand{\del}{\vec{\nabla}}
+\newcommand{\e}{\epsilon}
+\newcommand{\tpd}[3]{\left( \frac{\partial #1}{\partial #2} \right)_{#3}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\spd}[2]{\frac{\partial^2 #1}{\partial {#2}^2}}
+\def\dbar{{\mathchar'26\mkern-12mu d}}
+
+\allowdisplaybreaks
+
+
+\author{Tyler Blanton \quad Sam Kowash}
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\title{CSE 546 Project Proposal}
+
+\begin{document}
+\maketitle
+
+The arXiv is a well-regarded online repository for preprints from a wide range of technical disciplines maintained by Cornell University.  The snarXiv, on the other hand, is a tool for generating titles and abstracts in the style of \texttt{hep-th} (theoretical physics) papers from a context-free grammar written by physicist David Simmons-Duffin. Both sources operate within fairly rigid structures
+
+
+
+
+\end{document}
