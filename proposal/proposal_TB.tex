@@ -18,11 +18,16 @@ He used it make the game ``arXiv vs. snarXiv," in which readers are presented wi
 After 750,000 guesses, the success rate was only 59\%; i.e., people mistakenly chose the randomly generated snarXiv title/abstract to be the real one 41\% of the time, which is pretty remarkable (and amusing).
 
 Our goal is to use machine learning techniques to write a program that accurately classifies HEP-th title/abstract pairs as being real (arXiv) or fake (snarXiv).
+We would like to explore how different learning algorithms perform; for example, we predict that sequence models like convolutional neural networks will outperform n-gram models like logistic regression due to the grammatical syntax that snarXiv uses, and we would like to test this.
+Although the scope our project is restricted to the admittedly impractical field of faux physics literature, the problem of distinguishing real vs. simulated writing does have real-world applications such as spam-filtering. 
+
+
 The arXiv has an API%
 \footnote{https://arxiv.org/help/api/index}
 for downloading text samples, and Simmons-Duffin has made his snarXiv code available on github.%
 \footnote{https://github.com/davidsd/snarxiv}
 %
+
 
 
 
