@@ -62,9 +62,29 @@
 \begin{document}
 \maketitle
 
-The arXiv is a well-regarded online repository for preprints from a wide range of technical disciplines maintained by Cornell University.  The snarXiv, on the other hand, is a tool for generating titles and abstracts in the style of \texttt{hep-th} (theoretical physics) papers from a context-free grammar written by physicist David Simmons-Duffin. Both sources operate within fairly rigid structures
+The arXiv is a free online repository maintained by Cornell for preprints of scientific papers (many of which are also published in journals) from fields such as mathematics, physics, and computer science.
+Submissions are moderated via an endorsement system to ensure that only legitimate papers are posted, making it a valuable resource for scientists in many disciplines. In many areas of theoretical physics, almost all new papers are posted to the arXiv before publication.
+% contains over a million papers (many of which are also published in scientific journals).
+
+The snarXiv is a computer program created by physicist David Simmons-Duffin that generates titles and abstracts in the style of arXiv's \texttt{hep-th} section using a context-free grammar.
+Simmons-Duffin created a game, ``arXiv vs. snarXiv,'' in which readers are presented with two title/abstract pairs -- one from \texttt{hep-th}, the other generated with snarXiv -- and are asked to choose which one is real.
+After 750,000 guesses, the success rate was only 59\%; i.e., people mistakenly chose the randomly generated snarXiv title/abstract to be the real one 41\% of the time, which is pretty remarkable (and amusing).
+
+Our goal is to use machine learning techniques to write a program that accurately classifies \texttt{hep-th} title/abstract pairs as real (arXiv) or fake (snarXiv).
+The arXiv has an API%
+\footnote{\url{https://arxiv.org/help/api/index}}
+for downloading metadata (including titles and abstracts), and Simmons-Duffin has made his snarXiv code available on GitHub\footnote{\url{https://github.com/davidsd/snarxiv}}, so we can sample large data sets from it.
+%
+
+We think this poses an interesting classification problem, as each corpus follows a relatively constrained syntax --- arXiv the conventions of academic writing, and snarXiv the grammar constructed to parody those conventions --- but one carries semantic cargo while the other is senseless. Discriminating between them can be difficult for humans, including (based on an informal survey of nearby offices\ldots) those with substantial domain knowledge.
+
+Our plan is to explore a variety of methods 
 
 
+Depending on how things go, we may try to add viXra to the mix.
+viXra is like arXiv except that all submissions are accepted, which is why a significant percentage of its papers are low-quality and/or factually inaccurate.
+As far as we know there is no API for viXra though, so getting data from it may not be worth the effort.
 
 
+Supervised learning: logistic regression, support vector machine, 
 \end{document}
