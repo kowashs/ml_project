@@ -1,0 +1,18 @@
+\begin{thebibliography}{1}
+
+\bibitem{textclass}
+Charu~C. Aggarwal and ChengXiang Zhai.
+\newblock A survey of text classification algorithms.
+\newblock In {\em Mining Text Data}. Springer, Boston, Massachusetts, 2012.
+
+\bibitem{ngram-cat}
+William Cavnar and John Trenkle.
+\newblock N-gram-based text categorization.
+\newblock 05 2001.
+
+\bibitem{rnn-effect}
+Andrej Karpathy.
+\newblock The unreasonable effectiveness of recurrent neural networks, May
+  2015.
+
+\end{thebibliography}

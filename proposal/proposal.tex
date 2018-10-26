@@ -1,6 +1,6 @@
 \documentclass[11pt,letterpaper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[top=1in,bottom=1in,left=1in,right=1in]{geometry}
+\usepackage[top=1in,bottom=1in,left=.75in,right=.75in]{geometry}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
@@ -57,14 +57,13 @@
 \author{Tyler Blanton \quad Sam Kowash}
 \numberwithin{equation}{section}
 \numberwithin{figure}{section}
-\title{CSE 546 Project Proposal}
+\title{CSE 546 Project Proposal: arXiv or snarXiv?}
 
 \begin{document}
-\maketitle
 
-The arXiv is a free online repository maintained by Cornell for preprints of scientific papers (many of which are also published in journals) from fields such as mathematics, physics, and computer science.
+\maketitle
+The arXiv is a free online repository maintained by Cornell for preprints of scientific papers (many of which go on to be published in journals) from fields such as mathematics, physics, and computer science.
 Submissions are moderated via an endorsement system to ensure that only legitimate papers are posted, making it a valuable resource for scientists in many disciplines. In many areas of theoretical physics, almost all new papers are posted to the arXiv before publication.
-% contains over a million papers (many of which are also published in scientific journals).
 
 The snarXiv is a computer program created by physicist David Simmons-Duffin that generates titles and abstracts in the style of arXiv's \texttt{hep-th} section using a context-free grammar.
 Simmons-Duffin created a game, ``arXiv vs. snarXiv,'' in which readers are presented with two title/abstract pairs -- one from \texttt{hep-th}, the other generated with snarXiv -- and are asked to choose which one is real.
@@ -78,13 +77,22 @@ for downloading metadata (including titles and abstracts), and Simmons-Duffin ha
 
 We think this poses an interesting classification problem, as each corpus follows a relatively constrained syntax --- arXiv the conventions of academic writing, and snarXiv the grammar constructed to parody those conventions --- but one carries semantic cargo while the other is senseless. Discriminating between them can be difficult for humans, including (based on an informal survey of nearby offices\ldots) those with substantial domain knowledge.
 
-Our plan is to explore a variety of methods 
+Our plan is to explore the performance of a variety of learning approaches on this task; for example, we predict that sequence models like recurrent neural networks may outperform $n$-gram models due to the grammatical syntax that snarXiv uses, and we would like to test this. 
+We will also need to consider various methods of word embedding to transform text into usable features.
+Although the scope our project is restricted to the admittedly impractical field of faux physics literature, the problem of distinguishing real vs. simulated writing does have real-world applications such as spam-filtering. 
 
 
-Depending on how things go, we may try to add viXra to the mix.
-viXra is like arXiv except that all submissions are accepted, which is why a significant percentage of its papers are low-quality and/or factually inaccurate.
-As far as we know there is no API for viXra though, so getting data from it may not be worth the effort.
+By the project milestone, we expect to have have calculated the classification accuracy for at least one method, and hopefully two: one $n$-gram model and one sequence model.
+
+%Depending on how things go, we may try to add viXra to the mix.
+%viXra is like arXiv except that all submissions are accepted, and consequently a significant percentage of its papers are low-quality and/or factually inaccurate.
+%As far as we know there is no API for viXra though, so getting data from it may not be worth the effort.
 
 
-Supervised learning: logistic regression, support vector machine, 
+\nocite{*}
+
+
+\bibliographystyle{plain}
+\bibliography{proposal}
+
 \end{document}
