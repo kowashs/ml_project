@@ -66,7 +66,7 @@ The arXiv is a free online repository maintained by Cornell for preprints of sci
 Submissions are moderated via an endorsement system to ensure that only legitimate papers are posted, making it a valuable resource for scientists in many disciplines. In many areas of theoretical physics, almost all new papers are posted to the arXiv before publication.
 
 The snarXiv is a computer program created by physicist David Simmons-Duffin that generates titles and abstracts in the style of arXiv's \texttt{hep-th} section using a context-free grammar.
-Simmons-Duffin created a game, ``arXiv vs. snarXiv,'' in which readers are presented with two title/abstract pairs -- one from \texttt{hep-th}, the other generated with snarXiv -- and are asked to choose which one is real.
+Simmons-Duffin created a game, ``arXiv vs. snarXiv,'' in which readers are presented with two title/abstract pairs --- one from \texttt{hep-th}, the other generated with snarXiv --- and are asked to choose which one is real.
 After 750,000 guesses, the success rate was only 59\%; i.e., people mistakenly chose the randomly generated snarXiv title/abstract to be the real one 41\% of the time, which is pretty remarkable (and amusing).
 
 Our goal is to use machine learning techniques to write a program that accurately classifies \texttt{hep-th} title/abstract pairs as real (arXiv) or fake (snarXiv).
@@ -79,7 +79,7 @@ We think this poses an interesting classification problem, as each corpus follow
 
 Our plan is to explore the performance of a variety of learning approaches on this task; for example, we predict that sequence models like recurrent neural networks may outperform $n$-gram models due to the grammatical syntax that snarXiv uses, and we would like to test this. 
 We will also need to consider various methods of word embedding to transform text into usable features.
-Although the scope our project is restricted to the admittedly impractical field of faux physics literature, the problem of distinguishing real vs. simulated writing does have real-world applications such as spam-filtering. 
+Although the scope of our project is restricted to the admittedly impractical field of faux physics literature, the problem of distinguishing real vs. simulated writing does have real-world applications such as spam-filtering. 
 
 
 By the project milestone, we expect to have have calculated the classification accuracy for at least one method, and hopefully two: one $n$-gram model and one sequence model.
