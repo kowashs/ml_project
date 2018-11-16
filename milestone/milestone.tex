@@ -23,10 +23,13 @@
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
+\usepackage{amsmath}
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 
 \title{Project Milestone: arXiv vs. snarXiv}
+
+\renewcommand{\P}{\mathbb{P}}
 
 % The \author macro works with any number of authors. There are two
 % commands used to separate the names and addresses of multiple
@@ -118,6 +121,47 @@ In any case, the output of our parsing procedure is two lists of lists (one arXi
 
 
 \subsection{Classifying abstracts}
+For our first attempt at creating a program that distinguishes between arXiv and snarXiv abstracts, we built a naive Bayes classifier.
+The theory behind this classifier is simple:
+assume that each abstract $X$ has a probability $\P(Y|X)$ of being from source $Y\in\{\text{arXiv, snarXiv}\}$.
+If $\P(\text{arxiv}|X) > \P(\text{snarxiv}|X)$, then we should classify $X$ as arXiv; otherwise, we should classify it as snarXiv.
+%\\
+%\\
+%\underline{Naive Bayes classifier}:
+%\begin{addmargin}[1em]{2em}% 1em left, 2em right
+%Assume that each abstract $X$ has a probability $\P(Y|X)$ of being from source $Y\in\{\text{arXiv, snarXiv}\}$.
+%If $\P(\text{arxiv}|X) > \P(\text{snarxiv}|X)$, then classify $X$ as arXiv; otherwise, classify it as snarXiv.
+%\end{addmargin}
+This is an intuitive classification condition -- the only challenge is approximating $\P(Y|X)$ for any abstract $X$.
+We can simplify matters by noting that
+\begin{align}
+  \P(Y|X) = \frac{\P(Y)\P(X|Y)}{\P(X)},
+\end{align}
+which means we should classify $X$ as arXiv iff
+\begin{align}
+  \P(\text{arxiv}|X) &> \P(\text{snarxiv}|X)  \\
+  \Rightarrow \P(\text{arxiv})\P(X|\text{arxiv}) &> \P(\text{snarxiv})\P(X|\text{snarxiv}). \label{Bayes}
+\end{align}
+We estimate each probability in \eqref{Bayes} by training on a large number of arXiv and snarXiv abstracts.
+Since we are in control over how many arXiv vs. snarXiv abstracts will be in the train and test sets, $\P(Y)$ is not too interesting -- we ``approximate" it as the fraction of training abstracts which are from source $Y$, and its ``accuracy" is given by how close it is to the corresponding fraction of test abstracts which are from $Y$.
+
+The less trivial task is estimating $\P(X|Y)$ -- the probability that source $Y$ will produce a given abstract $X$.
+Perhaps the simplest estimation scheme is the bag-of-words model, in which each word $x_i\in X$ is assumed to be independent of all other words in the abstract.
+This model is obviously flawed since certain word sequences are much more likely than others, but it can still be useful if some words are more likely in one source than another, so we adopt it to compute our initial estimate.
+In this model, we define our training estimate $\widehat\P(X|Y)\approx\P(X|Y)$ as
+\begin{align}
+  \widehat\P(X|Y) &\equiv \prod_i \widehat\P(x_i|Y), \\
+  \text{where } \quad \widehat\P(x_i|Y) &\equiv \frac{\#(x_i\in Y)_\text{train}}{\sum_j \#(x_j\in Y)_\text{train}}
+\end{align} 
+is the frequency with which word $x_i$ appears in source $Y$ inside the training set; $\#(x_i\in Y)$ is the number of times word $x_i$ appears in source $Y$ in the training set, and thus $\sum_j \#(x_j\in Y)$ is the total number of words in $Y$ inside the training set.
+
+Testing this method on new abstracts after training on 800 arXiv and 800 snarXiv abstracts, we find that the algorithm correctly classifies an abstract as arXiv or snarXiv roughly 85\% of the time.
+This accuracy is not fantastic (which is to be expected given the simplicity of the model), but it is higher than we expected, and is already well higher than the average human classification accuracy of 57\%.%
+\footnote{According to \url{http://snarxiv.org/vs-arxiv/highscores/}}
+Looking a little more closely at the results, we find that the only misclassifications made are arXiv abstracts that the classifier mistakes as snarXiv -- when a snarXiv abstract is tested, it is correctly identified as snarXiv 100\% of the time.
+The explanation for this finding is relatively simple: snarXiv only has about 1000 unique words that it pulls from when generating fake abstracts, so each of these words occurs with a significant probability.
+Any reasonably large training set exposes this, and thus the classifier has no problem identifying snarXiv abstracts correctly.
+On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making for lower individual word probabilities), and thus the classifier can struggle when an arXiv abstract contains several snarXiv words.
 
 
 
@@ -164,20 +208,6 @@ This leads naturally to the field of word embeddings, which aim to map this pain
 
 
 
-\subsection{Classification}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 \subsection{Possible extension}
@@ -191,6 +221,8 @@ The aim would be to produce, effectively, a next-generation snarXiv that achieve
 Several sources note that GANs are not naturally suited to contexts with discrete data streams, so this may prove unworkable, but is one direction to pursue if our original plan leads to shallow results.
 
 
+
+\nocite{*}
 
 \bibliographystyle{plainnat}
 \bibliography{milestone.bib}
