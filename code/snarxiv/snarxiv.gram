@@ -631,4 +631,5 @@ secondarysubj ::= Nuclear Theory (nucl-th)| Cosmology and Extragalactic Astrophy
              General Relativity and Quantum Cosmology (gr-qc)| Statistical Mechanics (cond-mat.stat-mech)
 papersubjects ::= <primarysubj> | <papersubjects>; <secondarysubj>
 
-paper ::= <title> \\ <authors> \\ <comments> \\ <papersubjects> \\ <abstract>
+#paper ::= <title> \\ <authors> \\ <comments> \\ <papersubjects> \\ <abstract>
+paper ::= <abstract>
