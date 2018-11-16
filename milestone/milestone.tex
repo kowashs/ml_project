@@ -181,6 +181,14 @@ This leads naturally to the field of word embeddings, which aim to map this pain
 
 
 \subsection{Possible extension}
+Our results thus far suggest that the language produced by snarXiv may just be too artificial and constrained to put up much of a fight in the classification task.
+The naive Bayes classifier never mistakes a snarXiv paper for real, although it still accidentally flags a decent chunk of real papers as fake.
+We will continue this work with more sophisticated feature generation and classifiers to explore different methods and try to reduce the remaining error, but it is worth looking in other directions as well.
+
+In particular, if snarXiv cannot produce abstracts that our convincing to our classifier, what can?
+The field of generative adversarial networks has become prominent recently, as reviewed in \citet{creswell2018generative}, and we are considering extending our project in this direction.
+The aim would be to produce, effectively, a next-generation snarXiv that achieves a meaningful error rate against its discriminating counterpart.
+Several sources note that GANs are not naturally suited to contexts with discrete data streams, so this may prove unworkable, but is one direction to pursue if our original plan leads to shallow results.
 
 
 
