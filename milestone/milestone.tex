@@ -71,7 +71,7 @@
 \maketitle
 
 \begin{abstract}
-  We give a brief update on our project to develop a classifier that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv.
+  We give a brief update on our project to develop a classifier that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
   Our progress consists of three major parts: obtaining large amounts of data in an efficient way, parsing the abstract text to prepare it for analysis, and implementing a simple classification algorithm -- a naive Bayes classifier using a bag-of-words model.
   We chose this extremely simple classifier to serve as a proof of concept, though it already outperforms humans (successful classification rate is 75-80\% vs. 59\% for humans).
 \end{abstract}
@@ -87,7 +87,7 @@ We estimate that \texttt{hep-th} has $\sim$85000 articles, and we'd ideally use 
 Fortunately, arXiv also furnishes an Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) interface, which is better-suited to full-repository harvesting. We use the \texttt{pyoai} module\footnote{\url{https://github.com/infrae/pyoai}} to retrieve the full metadata set from \texttt{hep-th}, extract the abstract text from the returned XML structure, and feed it to the parser, which normalizes it for analysis.
 
 The snarXiv abstracts are even easier to obtain, since we can generate them at will.
-We use a modified grammar file to produce only abstracts rather than titles and authors, then call the compiled snarxiv generator repeatedly to produce a corpus, which can be fed to the parser.
+We use a modified grammar file to produce only abstracts rather than titles and authors, then call the compiled snarXiv generator repeatedly to produce a corpus, which can be fed to the parser.
 (The snarXiv generator could of course be modified to produce the desired format in the first place, but we prefer to use as much of the original tool as possible.)
 
 
