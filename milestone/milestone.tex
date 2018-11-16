@@ -80,12 +80,12 @@
 \label{sec:progress}
 \subsection{Obtaining abstracts}
 The arXiv exposes its search API through a well-documented HTTP interface, but this has limitations in the context of our project as it is configured to find no more than 30000 results, and return no more than 2000 of them at a time.
-We estimate that \texttt{hep-th} has $\sim$85000 articles, and we'd ideally train on all of them, so we need a more robust data acquisition tool.
-Fortunately, arXiv also furnishes an Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) interface, which is better-suited to full-repository harvesting. We use the \texttt{pyoai}\footnote{\url{https://github.com/infrae/pyoai}} module to retrieve the full metadata set from \texttt{hep-th}, extract the abstract text from the XML structure, and feed it to the parser.
+We estimate that \texttt{hep-th} has $\sim$85000 articles, and we'd ideally use all of them, so we need a more robust data acquisition tool.
+Fortunately, arXiv also furnishes an Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) interface, which is better-suited to full-repository harvesting. We use the \texttt{pyoai} module\footnote{\url{https://github.com/infrae/pyoai}} to retrieve the full metadata set from \texttt{hep-th}, extract the abstract text from the returned XML structure, and feed it to the parser, which normalizes it for analysis.
 
 The snarXiv abstracts are even easier to obtain, since we can generate them at will.
-We use a modified grammar file to produce only abstracts, then call the compiled snarxiv generator repeatedly to produce a corpus, which can then be fed to the parser.
-(The snarXiv generator could of course be modified to produce the desired format in the first place, but we prefer to use as much of the original tool as possible.
+We use a modified grammar file to produce only abstracts rather than titles and authors, then call the compiled snarxiv generator repeatedly to produce a corpus, which can be fed to the parser.
+(The snarXiv generator could of course be modified to produce the desired format in the first place, but we prefer to use as much of the original tool as possible.)
 
 
 
@@ -95,7 +95,15 @@ We use a modified grammar file to produce only abstracts, then call the compiled
 
 
 \subsection{Parsing abstract text}
+The raw response from an arXiv API call is a bunch of text consisting of full \texttt{hep-th} papers (which often contain TeX symbols like \$ and  \textbackslash) along with several tags specifying sections as title, author, abstract, etc.
+For simplicity, we are currently only focusing on the abstracts, which we pull out and organize into a list using Python's \texttt{feedparser} package.
+We also store snarXiv abstracts in this form, so the rest of the parsing process is the same for the arXiv and snarXiv data.
 
+The next step is to split the abstract text into regular words that are easily identifiable between different abstracts.
+We split on all spaces and newlines, and for uniformity we make all words lowercase and strip out all punctuation.
+This method works for the most part, but it leaves traces of some TeX commands; for example, it sends \texttt{\textbackslash mathbb\{Z\} $\to$ mathbbz}.
+In the future we may try a more sophisticated approach where we deal with TeX commands at the beginning before stripping all punctuation, but for now this issue is only a minor nuisance.
+In any case, the output of our parsing procedure is two lists of lists (one arXiv, one snarXiv), where each inner list is comprised of formatted words from a single abstract.
 
 
 
@@ -134,9 +142,16 @@ We use a modified grammar file to produce only abstracts, then call the compiled
 
 \section{Plans}
 \subsection{Feature development}
-Currently, 
+Currently, our feature model represents a given abstract as a dictionary of occurrence counts for each word in the abstract and each word known from the training corpus.
+This is called a bag-of-words model and is completely insensitive to word order, meaning that it is impossible for a classifier to take into account word co-occurrence rates or sentence position, which obviously contain most of the information in natural language.
+(That our simple classification scheme achieves such reasonable performance given an extremely reductive model is surprising, and might suggest that the problem as posed is too easy; more thoughts on that below.)
 
+The next step from a context-insensitive model is, obviously, the incorporation of context: instead of looking at how many times a given word appears in an abstract, we can look at the number of times it appears adjacent to each other word, or the number of times it appears in a triad with each pair of other words. This leads generically to the class of $n$-gram models, which incorporate length-$n$ sequences of words as elementary objects of analysis.
 
+Concretely, the Brown model is a common framework in which language production is treated as a Markov process with hidden states and transition probabilities, and frames the learning task as estimating these properties from $n$-gram occurrence data in the corpus.
+This task is complicated, however, by the rapidly ballooning amount of data that is produced if we must account for the occurrence of \emph{every} possible $n$-gram, even considering relatively small maximum correlation lengths.
+This leads naturally to the field of word embeddings, which aim to map this painfully high-dimensional space into a lower-dimensional feature space in a way that preserves useful information about relationships between words from the $n$-gram structure.
+\citet{stratos2015model} and \citet{stratos2014spectral} discuss efficient methods for generating embeddings from corpora, which will be our next implementation step in feature design.
 
 
 
@@ -151,4 +166,24 @@ Currently,
 
 \subsection{Classification}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Possible extension}
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{milestone.bib}
 \end{document}
