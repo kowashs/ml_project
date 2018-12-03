@@ -48,4 +48,4 @@ Thumbs.db
 *.blg
 
 slurm*
-
+data/*
