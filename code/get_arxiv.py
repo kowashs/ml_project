@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
-from oaipmh.client import Client
-from oaipmh.metadata import MetadataRegistry, oai_dc_reader
+from sickle import Sickle
 import string
 import datetime
 
@@ -9,26 +8,16 @@ import datetime
 
 URL = 'http://export.arxiv.org/oai2' # define repository URL
 
-registry = MetadataRegistry()
-registry.registerReader('oai_dc',oai_dc_reader) # define metadata reader
-client = Client(URL, registry) # create harvester
-print("Updating granularity if necessary.")
-#client.updateGranularity() # if selective harvesting necessary
-print("Client created.")
-
+sickle = Sickle('http://export.arxiv.org/oai2',max_retries=20)
 
 set_ = 'physics:hep-th'
 metadataPrefix = 'oai_dc'
 
+records = sickle.ListRecords(**{'metadataPrefix':metadataPrefix, 'set': set_})
 
-
-print("Making request.")
-# get records from repository; probably a long time (~80k papers)
-records = client.listRecords(metadataPrefix=metadataPrefix, set=set_)
-print("Harvesting complete.")
 
 # extract abstracts from records
-abstracts = np.array([record[1].getField('description')[0] for record in records])
+abstracts = np.array([record.metadata['description'][0] for record in records])
 
 np.save('../data/arxiv_raw_abstracts.npy',abstracts)
 print("Raw abstracts saved.")
