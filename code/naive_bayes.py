@@ -16,6 +16,7 @@ def train(arxiv_abstracts, snarxiv_abstracts):
   dict = {}
 
   arxiv_words = 0       # total # of words in arxiv training set
+  new_words=0
   for abstract in arxiv_abstracts:
     arxiv_words += len(abstract)
     for word in abstract:
@@ -23,8 +24,11 @@ def train(arxiv_abstracts, snarxiv_abstracts):
         dict[word] += np.array([1,0])
       else:
         dict[word] = np.array([1,0])
+        new_words+=1
+  print(new_words)
 
   snarxiv_words = 0      # total # of words in snarxiv training set
+  new_words=0
   for abstract in snarxiv_abstracts:
     snarxiv_words += len(abstract)
     for word in abstract:
@@ -32,21 +36,23 @@ def train(arxiv_abstracts, snarxiv_abstracts):
         dict[word] += np.array([0,1])
       else:
         dict[word] = np.array([0,1])
+        new_words+=1
+  print(new_words)
 
   # Create dictionary of conditional probabilities
   # Structure: P_dict['hello'] = [P('hello'|arxiv), P('hello'|snarxiv)]
   P_dict = {}
   for word in dict:
-    P_word_arxiv = dict[word][0]/arxiv_words
-    P_word_snarxiv = dict[word][1]/snarxiv_words
-    P_dict[word] = np.array([P_word_arxiv, P_word_snarxiv])
-
+    if dict[word][0]>0 and dict[word][1]>0: # only keep words appearing in both corpora
+      P_word_arxiv = dict[word][0]/arxiv_words
+      P_word_snarxiv = dict[word][1]/snarxiv_words
+      P_dict[word] = np.array([P_word_arxiv, P_word_snarxiv])
   return P_dict, P_arxiv
 
 
 # Classify a test abstract as arxiv or snarxiv using P_dict from train
 def classify(abstract,P_dict,P_arxiv):
-  # Compute [P(abstract|arxiv), P(abstract|snarxiv)]
+  # Compute [P(abstract|arxiv), P(abstract|snarxiv)] using bag-of-words model
   P_abstract_source = np.array([1.,1.])
   for word in abstract:
     if word in P_dict:
@@ -66,7 +72,7 @@ def classify(abstract,P_dict,P_arxiv):
 N_arxiv = 1000	    # must be <2000
 N_snarxiv = 1000
 # Choose where to start pulling papers in the arxiv search results
-arxiv_start = 600   # must be <30000-N_arxiv
+arxiv_start = 1500   # must be <30000-N_arxiv
 
 # Get abstracts
 arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
@@ -86,20 +92,26 @@ snarxiv_test = snarxiv_abstracts[N_snarxiv_train:]
 P_dict, P_arxiv = train(arxiv_train, snarxiv_train)
 
 # Attempt to classify test abstracts & compute classification error
-wins=0; losses=0
+arxiv_wins=0; arxiv_losses=0
 for abstract in arxiv_test:
   if classify(abstract,P_dict,P_arxiv) == 'arxiv':
-    wins+=1
+    arxiv_wins+=1
   else:
-    losses+=1
+    arxiv_losses+=1
+arxiv_accuracy = arxiv_wins/(arxiv_wins+arxiv_losses)
 
+snarxiv_wins=0; snarxiv_losses=0
 for abstract in snarxiv_test:
   if classify(abstract,P_dict,P_arxiv) == 'snarxiv':
-    wins+=1
+    snarxiv_wins+=1
   else:
-    losses+=1
+    snarxiv_losses+=1
+snarxiv_accuracy = snarxiv_wins/(snarxiv_wins+snarxiv_losses)
 
+wins = arxiv_wins+snarxiv_wins
+losses = arxiv_losses+snarxiv_losses
 accuracy = wins/(wins+losses)   # E_test = losses/(wins+losses)
-#print('Wins:',wins)
-#print('Losses:',losses)
+
+print('arXiv accuracy: %.3f (%i wins, %i losses)' %(arxiv_accuracy,arxiv_wins,arxiv_losses))
+print('snarXiv accuracy: %.3f (%i wins, %i losses)' %(snarxiv_accuracy,snarxiv_wins,snarxiv_losses))
 print('Accuracy: %.3f (%i wins, %i losses)' %(accuracy,wins,losses))
