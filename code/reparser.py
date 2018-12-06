@@ -20,4 +20,4 @@ for i in range(len(abstracts)):
 
 
 np.save('../data/arxiv_parsed.npy',np.array(parsed))
-print("rsed abstracts saved, exiting.")
+print("parsed abstracts saved, exiting.")
