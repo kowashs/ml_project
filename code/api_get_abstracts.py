@@ -10,7 +10,7 @@ def get_arxiv(start,N):
   search_query = 'cat:hep-th'       # only look at hep-th papers
 
   start = min(start,30000)          # choose which results from the search to keep
-  max_results = min(start+N,30000)
+  max_results = min(N,30000)
 
   # Construct url of query result
   base_url = 'http://export.arxiv.org/api/query?'
@@ -74,13 +74,13 @@ def get_snarxiv(N):
 # Each function above outputs a "matrix" (lists of lists) with a different abstract in each row.
 # More precisely: each row is the list of words in an abstract with no capital letters and no punctuation.
 
-# # Choose how many abstracts to get
-# N_arxiv = 2	# must be <2000
-# N_snarxiv = 2
-#
-# # Choose where to start pulling papers in the arxiv search results
-# arxiv_start = 0 # must be <30000-N_arxiv
-#
-# print(get_arxiv(arxiv_start,N_arxiv))
-# print('\n\n\n')
-# print(get_snarxiv(N_snarxiv))
+# Choose how many abstracts to get
+#N_arxiv = 2	# must be <2000
+#N_snarxiv = 2
+
+# Choose where to start pulling papers in the arxiv search results
+#arxiv_start = 0 # must be <30000-N_arxiv
+
+#print(get_arxiv(arxiv_start,N_arxiv))
+#print('\n\n\n')
+#print(get_snarxiv(N_snarxiv))

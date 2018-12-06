@@ -1,5 +1,5 @@
 import numpy as np
-import get_abstracts
+import api_get_abstracts as get_abstracts
 
 ###############################################################################
 # Create naive Bayes classifier using bag-of-words model

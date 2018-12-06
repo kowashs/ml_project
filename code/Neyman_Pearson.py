@@ -1,15 +1,10 @@
 import numpy as np, sys
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
-from matplotlib import rc
-# rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-# rc('text', usetex=True)
-# plt.rc('text', usetex=True)
-# plt.rc('font', family='sans-serif')
-import get_abstracts
+import api_get_abstracts as get_abstracts
 
 ###############################################################################
-# Create naive Bayes classifier using bag-of-words model
+# Create Neyman-Pearson classifier using bag-of-words model
 ###############################################################################
 # Compute conditional probabilities for training data (used in classifier)
 def train(arxiv_abstracts, snarxiv_abstracts):
