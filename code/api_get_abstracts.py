@@ -15,12 +15,16 @@ def my_parser(abstract):
 
   parsed_abstract = ['<s>']
   for w in abstract:
-    if w[-1] in '.?': # if word ended in ". " or "? ", assume it ended a sentence
-      parsed_abstract.append(w[:-1].translate(table))
-      parsed_abstract.append('<e>')
-      parsed_abstract.append('<s>')
+    if w[-1] in '.?' and len(w)>1: # if word ended in ". " or "? ", assume it ended a sentence
+      w = w[:-1].translate(table)
+      if len(w)>0:
+        parsed_abstract.append(w)
+        parsed_abstract.append('<e>')
+        parsed_abstract.append('<s>')
     else:
-      parsed_abstract.append(w.translate(table))
+      w = w.translate(table)
+      if len(w)>0:
+        parsed_abstract.append(w)
   if parsed_abstract[-1] == '<s>':
     del parsed_abstract[-1]
   if parsed_abstract[-1] != '<e>':
@@ -60,7 +64,7 @@ def get_arxiv(start,N):
     #lead_author = entry.author; #print(lead_author)
     abstract = entry.summary;    #print(abstract)
     parsed_abstract = my_parser(abstract)
-    snarxiv_abstracts.append(parsed_abstract)
+    arxiv_abstracts.append(parsed_abstract)
   return arxiv_abstracts
 
 
@@ -68,7 +72,6 @@ def get_arxiv(start,N):
 def get_stored_arxiv(N_arxiv):
     # data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_parsed.npy')
     data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_raw_abstracts.npy')
-    print(data[0])
     parsed_abstracts = [my_parser(abstract) for abstract in data[:N_arxiv]]
     return parsed_abstracts
 
