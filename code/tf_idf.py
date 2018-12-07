@@ -18,7 +18,7 @@ def idf(vocab,arxiv,snarxiv): #assumes abstracts pre-parsed, but in (N,1) array
     N_snarxiv = len(snarxiv)
     N_tot = N_arxiv + N_snarxiv
     tot = np.concatenate((arxiv,snarxiv))
-    dfs = np.zeros_like(vocab)
+    dfs = np.zeros_like(vocab,dtype=float)
 
     for i,word in enumerate(vocab):
         for abstract in tot:
@@ -29,8 +29,8 @@ def idf(vocab,arxiv,snarxiv): #assumes abstracts pre-parsed, but in (N,1) array
 
 
 def tf(vocab, abstract):
-    counts = np.zeros_like(vocab)
-    tfs = np.zeros_like(vocab)
+    counts = np.zeros_like(vocab,dtype=float)
+    tfs = np.zeros_like(vocab,dtype=float)
 
     for i,word in enumerate(vocab):
         if word in abstract:
