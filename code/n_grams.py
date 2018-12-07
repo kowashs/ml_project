@@ -147,8 +147,7 @@ snarxiv_train = snarxiv_abstracts[:N_snarxiv_train]
 snarxiv_test = snarxiv_abstracts[N_snarxiv_train:]
 
 # Load vocabulary (currently contains 11645 words)
-vocab = np.load('vocab.npz')['vocab']
-#vocab = vocab[:1000] # just to be safe (memory concerns)
+vocab = np.load('big_vocab.npz')['vocab']
 
 # Get word probabilities from training set
 P_dict_2, dict_1 = train(arxiv_train, snarxiv_train, vocab)

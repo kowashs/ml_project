@@ -26,10 +26,13 @@
 \usepackage{amsmath}
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
+\usepackage{graphicx}
+
 
 \title{Project Milestone: arXiv vs. snarXiv}
 
 \renewcommand{\P}{\mathbb{P}}
+\newcommand{\V}{\mathcal{V}}
 
 % The \author macro works with any number of authors. There are two
 % commands used to separate the names and addresses of multiple
@@ -79,8 +82,7 @@
 
 
 
-\section{Introduction}
-\label{sec:intro}
+\section{Introduction} \label{sec:intro}
 The arXiv exposes its search API through a well-documented HTTP interface, but this has limitations in the context of our project as it is configured to find no more than 30000 results, and return no more than 2000 of them at a time.
 We estimate that \texttt{hep-th} has $\sim$85000 articles, and we'd ideally use all of them, so we need a more robust data acquisition tool.
 Fortunately, arXiv also furnishes an Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) interface, which is better-suited to full-repository harvesting. We use the \texttt{pyoai} module\footnote{\url{https://github.com/infrae/pyoai}} to retrieve the full metadata set from \texttt{hep-th}, extract the abstract text from the returned XML structure, and feed it to the parser, which normalizes it for analysis.
@@ -90,8 +92,7 @@ We use a modified grammar file to produce only abstracts rather than titles and 
 (The snarXiv generator could of course be modified to produce the desired format in the first place, but we prefer to use as much of the original tool as possible.)
 
 
-\section{Implementation} % maybe should be in appendix
-\label{implementation}
+\section{Implementation} \label{sec:implementation} % maybe should be in appendix
 \subsection{Parsing abstract text}
 The raw response from an arXiv API call is a bunch of text consisting of full \texttt{hep-th} papers (which often contain TeX symbols like \$ and  \textbackslash) along with several tags specifying sections as title, author, abstract, etc.
 For simplicity, we are currently only focusing on the abstracts, which we pull out and organize into a list using Python's \texttt{feedparser} package.
@@ -106,45 +107,102 @@ In any case, the output of our parsing procedure is two lists of lists (one arXi
 
 \section{Theory}
 Each of the abstract classification algorithms we use consists of three main parts: a parser, a language model, and a classifier.
-Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Section~\ref{implementation}.
+Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Section~\ref{sec:implementation}.
  
-\subsection{Language models}
+\subsection{Language models} \label{sec:LMs}
 \subsubsection{$n$-grams}
-Let $Y=1$ represent the label ``snarXiv'', let $Y=-1$ represent ``arXiv'', and let $X:=w_1w_2\ldots w_N$ be an abstract containing $N$ words $\{w_i\}_{i=1}^N$.
-Assume that each abstract $X$ has a probability $\P(X|Y)$ of being from source $Y\in\{-1,1\}$.
+Assume that each abstract $X$ has a probability $\P(X|Y)$ of being from source $Y\in\{-1,1\}$, where $Y=1$ represents the label ``snarXiv'' and  $Y=-1$ represents the label ``arXiv.''
+Suppose $X=(w_1,w_2,\ldots,w_N)$ is an abstract containing $N$ words $\{w_i\}_{i=1}^N$, and let $w_i^{i+k}$ denote the word sequence $(w_i,w_{i+1},\ldots, w_{i+k})$.
+The $n$-grams language model approximates $\P(X|Y)$ as
+\begin{align}
+	\P(X|Y) = \P(w_1^N|Y) &= \prod_{i=1}^N \P(w_i|w_1^{i-1},Y)
+	\\
+	&\approx \prod_{i=1}^N \P(w_i| w_{i-n+1}^{i-1},Y) \quad\; (n\text{-grams approx.})
+\end{align}
+In other words, in the $n$-grams model we assume that the probability of a given word $w$ occurring in some abstract only depends on what the previous $n-1$ words in the abstract are, where $n$ is some (typically small) positive integer; the $n-1$ words on which $w$ depends are called the ``context'' of $w$.
 
-The $n$-grams language model breaks $X$ 
+In the simplest case $n=1$, each word occurrence is assumed to be completely independent of any context, which is why the 1-gram language model is often referred to as the ``bag-of-words'' (BoW) model.
+Given some training set of abstracts from source $Y$, we define our BoW training estimate $\widehat\P(X|Y)_\text{BoW}$ as
+\begin{align}
+  \widehat\P(X|Y)_\text{BoW} &=  \widehat\P(w_1^N|Y)_\text{BoW} \equiv \prod_{i=1}^N \widehat\P(w_i|Y), \\
+  \text{where } \quad \widehat\P(w_i|Y) &\equiv \frac{C_Y(w_i)+1}{\sum_w [C_Y(w)+1]} = \frac{C_Y(w_i)+1}{\sum_{w\in\V} C_Y(w)+V},
+\end{align}
+$C_Y(w_i)$ is the number of times that $w_i$ appears, $\V$ is a vocabulary of size $V=|\V|$ containing all of the words that we wish to learn about, and $\sum_{w\in\V} C_Y(w)$ is the total number of words in the training set.
+The extra $+1$ on each word count $C_Y(w)$ comes from Laplace smoothing, which is a precautionary measure taken to prevent zero probabilities from occurring in cases where we need to classify an abstract that contains a word that did not appear in the training set.
+Other technical details regarding bag-of-words and $n$-grams implementation can be found in Appendix~\ref{app:details}. 
+
+The generalization to $n>1$ is straightforward: we define our estimate $\widehat\P(X|Y)_{n\text{-gram}}$ for a given training set from source $Y$ to be
+\begin{align}
+	\widehat\P(X|Y)_{n\text{-gram}} = \widehat\P(w_1^N|Y)_{n\text{-gram}} &\equiv \prod_{i=1}^N \widehat\P(w_i| w_{i-n+1}^{i-1},Y),
+	\\
+	\text{where } \quad \widehat\P(w_i|w_{i-n+1}^{i-1},Y) &\equiv \frac{C_Y(w_{i-n+1}^i)+1}{C_Y(w_{i-n+1}^{i-1})+V},
+\end{align}
+$C_Y(w_{i-n+1}^i)$ is the number of times that the $n$-gram $w_{i-n+1}^i$ occurs, and $C_Y(w_{i-n+1}^{i-1})$ is the number of times that the $(n-1)$-gram $w_{i-n+1}^{i-1}$ appears.
+
+
+
 
 \subsubsection{tf--idf}
 
 
 
+
+
+
+
 \subsection{Classifiers}
-
-\subsubsection{Naive Bayes}
+\subsubsection{Naive Bayes classifier}
 Our first attempt at creating a program that distinguishes between arXiv and snarXiv abstracts utilized a naive Bayes (NB) classifier.
-The theory behind this classifier is simple: if $\P(-1|X) > \P(1|X)$, then we classify $X$ as arXiv; otherwise, we classify it as snarXiv.
-This is an intuitive classification condition -- the only challenge is approximating $\P(Y|X)$ for any abstract $X$.
-We can use Bayes' theorem $\P(Y|X) = \frac{\P(Y)\P(X|Y)}{\P(X)}$ to rewrite the NB classification condition as follows:
+The theory behind this classifier is simple: if $\P(Y=1|X) > \P(Y=-1|X)$, then we classify $X$ as snarXiv; otherwise, we classify it as arXiv.
+We can use Bayes' theorem $\P(Y|X) = \frac{\P(Y)\P(X|Y)}{\P(X)}$ to rewrite this classification condition as
 \begin{align}
-	\text{if} \;~ \P(-1)\P(X|-1) > \P(1)\P(X|1): \quad &\text{classify } X \text{ as arXiv} \label{Bayes}
-	\\
-	\text{else}: \quad &\text{classify } X \text{ as snarXiv}.
+	\widehat{Y}_{NB} \equiv \arg\max_{Y\in\{-1,1\}} \P(Y)\P(X|Y). \label{eq:Bayes}
 \end{align}
-We estimate each probability in \eqref{Bayes} by training on a large number of arXiv and snarXiv abstracts.
-Since we are in control over how many arXiv vs. snarXiv abstracts will be in the train and test sets, $\P(Y)$ is not too interesting -- we ``approximate" it as the fraction of training abstracts which are from source $Y$, and its ``accuracy" is given by how close it is to the corresponding fraction of test abstracts which are from $Y$.
+We estimate each probability in \eqref{eq:Bayes} by training on a large number of arXiv and snarXiv abstracts.
+We define our estimate%
+\footnote{The probabilities $\P(Y=\pm1)$ are somewhat trivial since we generate the snarXiv abstracts ourselves and can control over how many arXiv vs. snarXiv abstracts will be in the train and test sets. Since the snarXiv was originally created to make abstracts that compete one-on-one with arXiv abstracts, we chose to set $\P(Y=\pm1)=\tfrac{1}{2}$ for all tests reported in this paper.}
+%
+for $\P(Y)$ as the number of abstracts in training set $Y$ over the total number of abstracts in both the arXiv and snarXiv training sets.
+The conditional probabilities $\P(X|Y)$ are more complicated, and are approximated using a language model from Section~\ref{sec:LMs}.
 
-The less trivial task is estimating $\P(X|Y)$ -- the probability that source $Y$ will produce a given abstract $X$.
-Perhaps the simplest estimation scheme is the bag-of-words model, in which each word $x_i\in X$ is assumed to be independent of all other words in the abstract.
-This model is obviously flawed since certain word sequences are much more likely than others, but it can still be useful if some words are more likely in one source than another, so we adopt it to compute our initial estimate.
-In this model, we define our training estimate $\widehat\P(X|Y)\approx\P(X|Y)$ as
+
+
+\subsubsection{Likelihood-ratio test}
+A slightly more sophisticated classification rule is the likelihood-ratio (LR) test.
+For a given abstract $X$, define the likelihood ratio $\Lambda(X)\equiv\frac{\P(X|Y=1)}{\P(X|Y=-1)}$.
+While we certainly want our classifier to correctly label all snarXiv abstracts as fakes, we also want to minimize the probability that an arXiv abstract gets incorrectly classified as fake.
+The Neyman-Pearson lemma states that the optimal classifier
 \begin{align}
-  \widehat\P(X|Y) &\equiv \prod_i \widehat\P(x_i|Y), \\
-  \text{where } \quad \widehat\P(x_i|Y) &\equiv \frac{\#(x_i\in Y)_\text{train}}{\sum_j \#(x_j\in Y)_\text{train}}
-\end{align} 
-is the frequency with which word $x_i$ appears in source $Y$ inside the training set; $\#(x_i\in Y)$ is the number of times word $x_i$ appears in source $Y$ in the training set, and thus $\sum_j \#(x_j\in Y)$ is the total number of words in $Y$ inside the training set.
+	\delta_{LR}^* \equiv \arg\max_\delta \P(\delta(X)=1|Y=1), \text{\; subject to \;} \P(\delta(X)=1|Y=-1)\leq \alpha
+\end{align}
+for any fixed false-positive tolerance $\alpha$ takes the form
+\begin{align}
+	\P\left(\delta_{LR}^*(X)=1\right) =
+	\begin{cases}
+		1, 	& \Lambda(X) > \eta \\
+		\gamma, & \Lambda(X) = \eta \\
+		0, 	& \Lambda(X) < \eta,
+	\end{cases}
+\end{align}
+where $\eta$ and $\gamma$ can be treated as hyperparameters to be tuned in cross-validation.
+In practice, $\gamma$ is almost completely irrelevant since for any $\eta$, the odds that a language model like $n$-grams would yield an estimate for $\Lambda(X)$ that is \textit{exactly} equal to $\eta$ are essentially zero.%
+\footnote{The borderline case of the naive Bayes classifier where $\P(Y=\pm1|X)=\frac{1}{2}$ is irrelevant for the same reason.}
+%
+We arbitrarily use $\gamma=0.5$, meaning the only hyperparameter we tune is $\eta$.
 
-Testing this method on new abstracts after training on 800 arXiv and 800 snarXiv abstracts, we find that the algorithm correctly classifies an abstract as arXiv or snarXiv roughly 85\% of the time.
+
+
+
+
+
+
+
+
+
+
+\section{Results}
+
+Testing the method on new abstracts after training on 800 arXiv and 800 snarXiv abstracts, we find that the algorithm correctly classifies an abstract as arXiv or snarXiv roughly 85\% of the time.
 This accuracy is not fantastic (which is to be expected given the simplicity of the model), but it is higher than we expected, and is already well higher than the average human classification accuracy of 57\%.%
 \footnote{According to \url{http://snarxiv.org/vs-arxiv/highscores/}}
 Looking a little more closely at the results, we find that the only misclassifications made are arXiv abstracts that the classifier mistakes as snarXiv -- when a snarXiv abstract is tested, it is correctly identified as snarXiv 100\% of the time.
@@ -153,14 +211,24 @@ Any reasonably large training set exposes this, and thus the classifier has no p
 On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making for lower individual word probabilities), and thus the classifier can struggle when an arXiv abstract contains several snarXiv words.
 
 
-\subsubsection{Likelihood ratio}
-aka Neyman-Pearson hypothesis test
+
+
+\begin{figure}[!htbp]
+\centering
+	\includegraphics[width=0.48\textwidth]{../figures/FDR_TPR_plot.png}
+	%\caption{LR-classifier using bag-of-words model.}
+\end{figure}
 
 
 
-
-
-
+\begin{figure}[!htbp]
+\centering
+	\includegraphics[width=0.48\textwidth]{../figures/BOW_histogram.png}
+	%\caption{LR-classifier using bag-of-words model.}
+	\hfill
+	\includegraphics[width=0.48\textwidth]{../figures/bigram_histogram.png}
+	%\caption{LR-classifier using bigram model.}
+\end{figure}
 
 
 
@@ -216,6 +284,19 @@ In particular, if snarXiv cannot produce abstracts that are convincing to our cl
 The field of generative adversarial networks has become prominent recently, as reviewed in \citet{creswell2018generative}, and we are considering extending our project in this direction.
 The aim would be to produce, effectively, a next-generation snarXiv that achieves a meaningful error rate against its discriminating counterpart.
 Several sources note that GANs are not naturally suited to contexts with discrete data streams, so this may prove unworkable, but is one direction to pursue if our original plan leads to shallow results.
+
+
+
+
+
+\appendix
+\section{Technical details} \label{app:details}
+$n$-grams: test words not in vocabulary ('<UNK>'), begin/end sentence characters ('<s>','<e>')... more parsing details here?
+
+computing probabilities: taking logs, normalizing by abstract length (perplexities?)
+
+
+
 
 
 
