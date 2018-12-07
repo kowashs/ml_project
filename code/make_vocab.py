@@ -51,10 +51,10 @@ def make_vocab(arxiv_abstracts, snarxiv_abstracts):
 # Create vocabulary & save to .npz file
 
 # Choose how many abstracts to get (train+test)
-N_arxiv = 2000	    # must be <=2000
-N_snarxiv = 2000
+N_arxiv = 120000
+N_snarxiv = 120000
 # Choose where to start pulling papers in the arxiv search results
-arxiv_start = 3000   # must be <=30000-N_arxiv
+# arxiv_start = 3000   # must be <=30000-N_arxiv
 
 # Get abstracts
 # arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
@@ -67,6 +67,6 @@ snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
 # Create vocabulary and save to file
 vocab = make_vocab(arxiv_abstracts,snarxiv_abstracts)
-np.savez('vocab',vocab=vocab)
+np.savez('big_vocab',vocab=vocab)
 
 print('Vocabulary created! Size:',len(vocab))
