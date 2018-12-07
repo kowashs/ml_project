@@ -83,12 +83,10 @@ def classify(abstract, P_dict_2,dict_1, eta,gamma, vocab):
   # Compute [P(abstract|arxiv), P(abstract|snarxiv)] using bag-of-words model
   # Use log[P(abstract|arxiv)/P(abstract|snarxiv)] to classify
   V = len(vocab)
-  if len(abstract) == 1:
-    return 'snarxiv', 10
   for i,word in enumerate(abstract):
     if word not in vocab:
       abstract[i] = '<UNK>'
-  N_bigrams = max(len(abstract)-1,1)
+  #N_bigrams = max(len(abstract)-1,1)
   log_arx2snarx_ratio = 0
   for i in range(len(abstract)-1):
     bigram = tuple(abstract[i:i+2])
@@ -98,22 +96,8 @@ def classify(abstract, P_dict_2,dict_1, eta,gamma, vocab):
       w1 = bigram[0]
       log_arx2snarx_ratio += np.log((dict_1[w1][1]+V)/(dict_1[w1][0]+V))
     #else: add log(V/V) = 0
-  log_arx2snarx_ratio = log_arx2snarx_ratio/N_bigrams
+  log_arx2snarx_ratio = log_arx2snarx_ratio/len(abstract)  # log(perplexities ratio)
 
-  # P_abstract_source = np.array([1.,1.])
-  # len_abstract = 0
-  # for word in abstract:
-  #   if word in P_dict:
-  #     P_abstract_source *= P_dict[word]
-  #     len_abstract += 1
-  # P_abstract_source = P_abstract_source**(1/len_abstract)
-  #
-  #if P_abstract_source[1] < 1e-14:
-  #  print(P_abstract_source[0]/P_abstract_source[1])
-  #arx2snarx_ratio = P_arxiv*P_abstract_source[0] / ((1.-P_arxiv)*P_abstract_source[1])
-
-  # if log_arx2snarx_ratio < -14:
-  #   print(log_arx2snarx_ratio)
 
   log_eta = np.log(eta)
   if log_arx2snarx_ratio > log_eta:
@@ -153,8 +137,8 @@ print(f"Loaded {N_arxiv} arXiv abstracts")
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
 # Split abstracts into train and test sets
-N_arxiv_train = int(round(0.5*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
-N_snarxiv_train = int(round(0.5*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
+N_arxiv_train = int(round(0.1*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
+N_snarxiv_train = int(round(0.1*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
 
 arxiv_train = arxiv_abstracts[:N_arxiv_train]
 arxiv_test = arxiv_abstracts[N_arxiv_train:]

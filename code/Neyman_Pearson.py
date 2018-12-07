@@ -60,7 +60,7 @@ def classify(abstract,P_dict,N_arxiv_words,N_snarxiv_words, eta,gamma, vocab):
       log_arx2snarx_ratio += np.log(P_dict[word][0])-np.log(P_dict[word][1])
     else:
       log_arx2snarx_ratio += np.log((N_snarxiv_words+V)/(N_arxiv_words+V))
-  log_arx2snarx_ratio = log_arx2snarx_ratio/len(abstract)
+  log_arx2snarx_ratio = log_arx2snarx_ratio/len(abstract) # log(perplexities ratio)
 
 
   log_eta = np.log(eta)

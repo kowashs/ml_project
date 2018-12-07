@@ -67,6 +67,7 @@ def get_arxiv(start,N):
 def get_stored_arxiv(N_arxiv):
     # data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_parsed.npy')
     data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_raw_abstracts.npy')
+    print(data[0])
     parsed_abstracts = [my_parser(abstract) for abstract in data[:N_arxiv]]
     return parsed_abstracts
 
@@ -76,13 +77,14 @@ def get_stored_arxiv(N_arxiv):
 ###################################################################################################################
 def get_snarxiv(N):
   # NOTE: I modified the last line of my snarxiv.gram to only give the abstract
-  snarxiv_path = '/gscratch/stf/blanton1/Project/snarxiv/snarxiv'
+  snarxiv_path = '/gscratch/stf/blanton1/Project/code/snarxiv/snarxiv'
   snarxiv_abstracts = []
   for i in range(N):
     abstract = subprocess.Popen(snarxiv_path, stdout=subprocess.PIPE)
     abstract = abstract.stdout.read().decode("utf-8")
     parsed_abstract = my_parser(abstract)
     snarxiv_abstracts.append(parsed_abstract)
+  print('Generated',N,'snarXiv abstracts')
   return snarxiv_abstracts
 
 

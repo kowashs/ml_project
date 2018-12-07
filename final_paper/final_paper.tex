@@ -1,0 +1,226 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+% \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading nips_2018
+
+% ready for submission
+\usepackage[final]{nips_2018}
+
+% to compile a preprint version, e.g., for submission to arXiv, add
+% add the [preprint] option:
+% \usepackage[preprint]{nips_2018}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+% \usepackage[final]{nips_2018}
+
+% to avoid loading the natbib package, add option nonatbib:
+% \usepackage[nonatbib]{nips_2018}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{amsmath}
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+\title{Project Milestone: arXiv vs. snarXiv}
+
+\renewcommand{\P}{\mathbb{P}}
+
+% The \author macro works with any number of authors. There are two
+% commands used to separate the names and addresses of multiple
+% authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to
+% break the lines. Using \AND forces a line break at that point. So,
+% if LaTeX puts 3 of 4 authors names on the first line, and the last
+% on the second line, try using \AND instead of \And before the third
+% author name.
+
+\author{Tyler Blanton \And Sam Kowash}
+  %% examples of more authors
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+
+
+\begin{document}
+% \nipsfinalcopy is no longer used
+
+\maketitle
+
+\begin{abstract}
+  We give a brief update on our project to develop a classifier that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
+  Our progress consists of three major parts: obtaining large amounts of data in an efficient way, parsing the abstract text to prepare it for analysis, and implementing a simple classification algorithm -- a naive Bayes classifier using a bag-of-words model.
+  We chose this extremely simple classifier to serve as a proof of concept, though it already outperforms humans (successful classification rate is $\sim$85\% vs. 57\% for humans).
+\end{abstract}
+
+
+
+
+\section{Introduction}
+\label{sec:intro}
+The arXiv exposes its search API through a well-documented HTTP interface, but this has limitations in the context of our project as it is configured to find no more than 30000 results, and return no more than 2000 of them at a time.
+We estimate that \texttt{hep-th} has $\sim$85000 articles, and we'd ideally use all of them, so we need a more robust data acquisition tool.
+Fortunately, arXiv also furnishes an Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) interface, which is better-suited to full-repository harvesting. We use the \texttt{pyoai} module\footnote{\url{https://github.com/infrae/pyoai}} to retrieve the full metadata set from \texttt{hep-th}, extract the abstract text from the returned XML structure, and feed it to the parser, which normalizes it for analysis.
+
+The snarXiv abstracts are even easier to obtain, since we can generate them at will.
+We use a modified grammar file to produce only abstracts rather than titles and authors, then call the compiled snarXiv generator repeatedly to produce a corpus, which can be fed to the parser.
+(The snarXiv generator could of course be modified to produce the desired format in the first place, but we prefer to use as much of the original tool as possible.)
+
+
+\section{Implementation} % maybe should be in appendix
+\label{implementation}
+\subsection{Parsing abstract text}
+The raw response from an arXiv API call is a bunch of text consisting of full \texttt{hep-th} papers (which often contain TeX symbols like \$ and  \textbackslash) along with several tags specifying sections as title, author, abstract, etc.
+For simplicity, we are currently only focusing on the abstracts, which we pull out and organize into a list using Python's \texttt{feedparser} package.
+We also store snarXiv abstracts in this form, so the rest of the parsing process is the same for the arXiv and snarXiv data.
+
+The next step is to split the abstract text into regular words that are easily identifiable between different abstracts.
+We split on all spaces and newlines, and for uniformity we make all words lowercase and strip out all punctuation.
+This method works for the most part, but it leaves traces of some TeX commands; for example, it sends \texttt{\textbackslash mathbb\{Z\} $\to$ mathbbz}.
+In the future we may try a more sophisticated approach where we deal with TeX commands at the beginning before stripping all punctuation, but for now this issue is only a minor nuisance.
+In any case, the output of our parsing procedure is two lists of lists (one arXiv, one snarXiv), where each inner list is comprised of formatted words from a single abstract.
+
+
+\section{Theory}
+Each of the abstract classification algorithms we use consists of three main parts: a parser, a language model, and a classifier.
+Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Section~\ref{implementation}.
+ 
+\subsection{Language models}
+\subsubsection{$n$-grams}
+Let $Y=1$ represent the label ``snarXiv'', let $Y=-1$ represent ``arXiv'', and let $X:=w_1w_2\ldots w_N$ be an abstract containing $N$ words $\{w_i\}_{i=1}^N$.
+Assume that each abstract $X$ has a probability $\P(X|Y)$ of being from source $Y\in\{-1,1\}$.
+
+The $n$-grams language model breaks $X$ 
+
+\subsubsection{tf--idf}
+
+
+
+\subsection{Classifiers}
+
+\subsubsection{Naive Bayes}
+Our first attempt at creating a program that distinguishes between arXiv and snarXiv abstracts utilized a naive Bayes (NB) classifier.
+The theory behind this classifier is simple: if $\P(-1|X) > \P(1|X)$, then we classify $X$ as arXiv; otherwise, we classify it as snarXiv.
+This is an intuitive classification condition -- the only challenge is approximating $\P(Y|X)$ for any abstract $X$.
+We can use Bayes' theorem $\P(Y|X) = \frac{\P(Y)\P(X|Y)}{\P(X)}$ to rewrite the NB classification condition as follows:
+\begin{align}
+	\text{if} \;~ \P(-1)\P(X|-1) > \P(1)\P(X|1): \quad &\text{classify } X \text{ as arXiv} \label{Bayes}
+	\\
+	\text{else}: \quad &\text{classify } X \text{ as snarXiv}.
+\end{align}
+We estimate each probability in \eqref{Bayes} by training on a large number of arXiv and snarXiv abstracts.
+Since we are in control over how many arXiv vs. snarXiv abstracts will be in the train and test sets, $\P(Y)$ is not too interesting -- we ``approximate" it as the fraction of training abstracts which are from source $Y$, and its ``accuracy" is given by how close it is to the corresponding fraction of test abstracts which are from $Y$.
+
+The less trivial task is estimating $\P(X|Y)$ -- the probability that source $Y$ will produce a given abstract $X$.
+Perhaps the simplest estimation scheme is the bag-of-words model, in which each word $x_i\in X$ is assumed to be independent of all other words in the abstract.
+This model is obviously flawed since certain word sequences are much more likely than others, but it can still be useful if some words are more likely in one source than another, so we adopt it to compute our initial estimate.
+In this model, we define our training estimate $\widehat\P(X|Y)\approx\P(X|Y)$ as
+\begin{align}
+  \widehat\P(X|Y) &\equiv \prod_i \widehat\P(x_i|Y), \\
+  \text{where } \quad \widehat\P(x_i|Y) &\equiv \frac{\#(x_i\in Y)_\text{train}}{\sum_j \#(x_j\in Y)_\text{train}}
+\end{align} 
+is the frequency with which word $x_i$ appears in source $Y$ inside the training set; $\#(x_i\in Y)$ is the number of times word $x_i$ appears in source $Y$ in the training set, and thus $\sum_j \#(x_j\in Y)$ is the total number of words in $Y$ inside the training set.
+
+Testing this method on new abstracts after training on 800 arXiv and 800 snarXiv abstracts, we find that the algorithm correctly classifies an abstract as arXiv or snarXiv roughly 85\% of the time.
+This accuracy is not fantastic (which is to be expected given the simplicity of the model), but it is higher than we expected, and is already well higher than the average human classification accuracy of 57\%.%
+\footnote{According to \url{http://snarxiv.org/vs-arxiv/highscores/}}
+Looking a little more closely at the results, we find that the only misclassifications made are arXiv abstracts that the classifier mistakes as snarXiv -- when a snarXiv abstract is tested, it is correctly identified as snarXiv 100\% of the time.
+The explanation for this finding is relatively simple: snarXiv only has about 1000 unique words that it pulls from when generating fake abstracts, so each of these words occurs with a significant probability.
+Any reasonably large training set exposes this, and thus the classifier has no problem identifying snarXiv abstracts correctly.
+On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making for lower individual word probabilities), and thus the classifier can struggle when an arXiv abstract contains several snarXiv words.
+
+
+\subsubsection{Likelihood ratio}
+aka Neyman-Pearson hypothesis test
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Extensions}
+\subsection{Feature development}
+Currently, our feature model represents a given abstract as a dictionary of occurrence counts for each word in the abstract and each word known from the training corpus.
+This is called a bag-of-words model and is completely insensitive to word order, meaning that it is impossible for a classifier to take into account word co-occurrence rates or sentence position, which obviously contain most of the information in natural language.
+(That our simple classification scheme achieves such reasonable performance given an extremely reductive model is surprising, and might suggest that the problem as posed is too easy; more thoughts on that below.)
+
+The next step from a context-insensitive model is, obviously, the incorporation of context: instead of looking at how many times a given word appears in an abstract, we can look at the number of times it appears adjacent to each other word, or the number of times it appears in a triad with each pair of other words. This leads generically to the class of $n$-gram models, which incorporate length-$n$ sequences of words as elementary objects of analysis.
+
+Concretely, the Brown model is a common framework in which language production is treated as a Markov process with hidden states and transition probabilities, and frames the learning task as estimating these properties from $n$-gram occurrence data in the corpus.
+This task is complicated, however, by the rapidly ballooning amount of data that is produced if we must account for the occurrence of \emph{every} possible $n$-gram, even considering relatively small maximum correlation lengths.
+This leads naturally to the field of word embeddings, which aim to map this painfully high-dimensional space into a lower-dimensional feature space in a way that preserves useful information about relationships between words from the $n$-gram structure.
+\citet{stratos2015model} and \citet{stratos2014spectral} discuss efficient methods for generating embeddings from corpora, which will be our next implementation step in feature design.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Possible extension}
+Our results thus far suggest that the language produced by snarXiv may just be too artificial and constrained to put up much of a fight in the classification task.
+The naive Bayes classifier never mistakes a snarXiv paper for real, although it still accidentally flags a decent chunk of real papers as fake.
+We will continue this work with more sophisticated feature generation and classifiers to explore different methods and try to reduce the remaining error, but it is worth looking in other directions as well.
+
+In particular, if snarXiv cannot produce abstracts that are convincing to our classifier, what can?
+The field of generative adversarial networks has become prominent recently, as reviewed in \citet{creswell2018generative}, and we are considering extending our project in this direction.
+The aim would be to produce, effectively, a next-generation snarXiv that achieves a meaningful error rate against its discriminating counterpart.
+Several sources note that GANs are not naturally suited to contexts with discrete data streams, so this may prove unworkable, but is one direction to pursue if our original plan leads to shallow results.
+
+
+
+\nocite{*}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}
