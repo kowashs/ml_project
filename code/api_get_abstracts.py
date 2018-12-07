@@ -1,10 +1,34 @@
 import urllib.request
-import feedparser, string
+import feedparser, string, numpy as np
 import subprocess
 
 ###################################################################################################################
 # Get arxiv abstracts
 ###################################################################################################################
+# Parse abstract
+def my_parser(abstract):
+  abstract = abstract.lower()    # no capitals
+  abstract = abstract.replace('-',' ')
+  abstract = abstract.split()    # split on spaces and hyphens
+  table = str.maketrans({key: None for key in string.punctuation}) # table to remove all punctuation
+
+  parsed_abstract = ['<s>']
+  for w in abstract:
+    if w[-1] in '.?': # if word ended in ". " or "? ", assume it ended a sentence
+      parsed_abstract.append(w[:-1].translate(table))
+      parsed_abstract.append('<e>')
+      parsed_abstract.append('<s>')
+    else:
+      parsed_abstract.append(w.translate(table))
+  if parsed_abstract[-1] == '<s>':
+    del parsed_abstract[-1]
+  if parsed_abstract[-1] != '<e>':
+    parsed_abstract.append('<e>')
+
+  return parsed_abstract
+
+
+
 def get_arxiv(start,N):
   # Set query parameters
   search_query = 'cat:hep-th'       # only look at hep-th papers
@@ -19,7 +43,6 @@ def get_arxiv(start,N):
 
   # Perform GET request to get raw response (unparsed)
   response = urllib.request.urlopen(url).read()
-  #print(response)
 
   # Prep parser (magic I will not question)
   feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
@@ -35,23 +58,18 @@ def get_arxiv(start,N):
     #title = entry.title;        #print(title)
     #lead_author = entry.author; #print(lead_author)
     abstract = entry.summary;    #print(abstract)
-
-    # Format abstract
-    abstract = abstract.lower()	# no capitals
-    table = str.maketrans({key: None for key in string.punctuation}) # removes all punctuation marks (makes some weird words, but overall works pretty well)
-    abstract = abstract.translate(table)
-    abstract = abstract.split()	# split abstract into list of lowercase words with no punctuation
-    #print(abstract)
-
-    arxiv_abstracts.append(abstract)
+    parsed_abstract = my_parser(abstract)
+    snarxiv_abstracts.append(parsed_abstract)
   return arxiv_abstracts
 
 
+# Get stored arxiv abstracts
 def get_stored_arxiv(N_arxiv):
-    data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_parsed.npy')
-    
-    return data[:N_arxiv]
-       
+    # data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_parsed.npy')
+    data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_raw_abstracts.npy')
+    parsed_abstracts = [my_parser(abstract) for abstract in data[:N_arxiv]]
+    return parsed_abstracts
+
 
 ###################################################################################################################
 # Get snarxiv abstracts
@@ -63,16 +81,8 @@ def get_snarxiv(N):
   for i in range(N):
     abstract = subprocess.Popen(snarxiv_path, stdout=subprocess.PIPE)
     abstract = abstract.stdout.read().decode("utf-8")
-
-    # Format abstract
-    abstract = abstract.lower() # no capitals
-    table = str.maketrans({key: None for key in string.punctuation}) # remove all punctuation
-    abstract = abstract.translate(table)
-
-    abstract = abstract.split()
-    #print(abstract)
-
-    snarxiv_abstracts.append(abstract)
+    parsed_abstract = my_parser(abstract)
+    snarxiv_abstracts.append(parsed_abstract)
   return snarxiv_abstracts
 
 
