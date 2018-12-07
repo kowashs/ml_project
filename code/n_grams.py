@@ -143,7 +143,13 @@ eta_list = [0.67]
 gamma = 0.5
 
 # Get abstracts
-arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
+# arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
+
+
+# Get abstracts from pre-downloaded data
+arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
+print(f"Loaded {N_arxiv} arXiv abstracts")
+
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
 # Split abstracts into train and test sets
@@ -224,7 +230,7 @@ eta_best = eta_list[i_best]
 #  '$\eta<$'+str(eta_best)],loc='lower right')
 # plt.xlabel('False Discovery Rate (FDR)')
 # plt.ylabel('True Positive Rate (TPR)')
-# plt.savefig('FDR_TPR_plot.png')
+# plt.savefig('../figures/FDR_TPR_plot.png')
 # plt.close()
 
 
@@ -246,7 +252,7 @@ _, max_ = plt.ylim()
 plt.text(0.67 + 0.067,
          max_ - max_/10,
          r'$\eta=0.67$')
-plt.savefig('bigram_histogram.png')
+plt.savefig('../figures/bigram_histogram.png')
 plt.close()
 
 
@@ -266,5 +272,5 @@ plt.close()
 # plt.legend(['arXiv','snarXiv'])
 # plt.xlabel('$P(w|Y)$')
 # plt.ylabel('Number of words')
-# plt.savefig('histogram.png')
+# plt.savefig('../figures/histogram.png')
 # plt.close()
