@@ -1,5 +1,10 @@
 import urllib.request
+<<<<<<< HEAD
 import feedparser, string, numpy as np
+=======
+import feedparser, string
+import numpy as np
+>>>>>>> New vocab
 import subprocess
 
 ###################################################################################################################
@@ -76,7 +81,7 @@ def get_stored_arxiv(N_arxiv):
 ###################################################################################################################
 def get_snarxiv(N):
   # NOTE: I modified the last line of my snarxiv.gram to only give the abstract
-  snarxiv_path = '/gscratch/stf/blanton1/Project/snarxiv/snarxiv'
+  snarxiv_path = './snarxiv/snarxiv'
   snarxiv_abstracts = []
   for i in range(N):
     abstract = subprocess.Popen(snarxiv_path, stdout=subprocess.PIPE)

@@ -13,23 +13,30 @@ def make_vocab(arxiv_abstracts, snarxiv_abstracts):
   dict = {}
 
   arxiv_words = 0       # total # of words in arxiv training set
-  for abstract in arxiv_abstracts:
+  for abst in enumerate(arxiv_abstracts):
+    i,abstract = abst
     arxiv_words += len(abstract)
     for word in abstract:
       if word in dict:
         dict[word] += np.array([1,0])
       else:
         dict[word] = np.array([1,0])
+    
+    if i%1000==0:
+      print(f"Processed {i+1} arXiv abstracts")
 
   snarxiv_words = 0      # total # of words in snarxiv training set
-  for abstract in snarxiv_abstracts:
+  for abst in enumerate(snarxiv_abstracts):
+    i,abstract = abst
     snarxiv_words += len(abstract)
     for word in abstract:
       if word in dict:
         dict[word] += np.array([0,1])
       else:
         dict[word] = np.array([0,1])
-
+    
+    if i%1000==0:
+      print(f"Processed {i+1} snarXiv abstracts")
   # Only put words occurring multiple times into the vocabulary (not sure if smart or not)
   # vocab = []
   # bad_words = np.array([0,0])
