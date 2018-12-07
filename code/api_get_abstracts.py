@@ -47,6 +47,12 @@ def get_arxiv(start,N):
   return arxiv_abstracts
 
 
+def get_stored_arxiv(N_arxiv):
+    data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_parsed.npy')
+    
+    return data[:N_arxiv]
+       
+
 ###################################################################################################################
 # Get snarxiv abstracts
 ###################################################################################################################

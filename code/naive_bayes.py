@@ -100,7 +100,8 @@ N_snarxiv = 1000
 arxiv_start = 1500   # must be <30000-N_arxiv
 
 # Get abstracts
-arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
+arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
+print(f"Loaded {N_arxiv} arXiv abstracts")
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
 # Split abstracts into train and test sets

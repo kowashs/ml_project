@@ -57,7 +57,12 @@ N_snarxiv = 2000
 arxiv_start = 3000   # must be <=30000-N_arxiv
 
 # Get abstracts
-arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
+# arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
+
+# Get abstracts from pre-downloaded data
+arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
+print(f"Loaded {N_arxiv} arXiv abstracts")
+
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
 # Create vocabulary and save to file

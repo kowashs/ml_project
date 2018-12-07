@@ -90,9 +90,13 @@ eta_list = [0.67]
 #eta = 0.5
 gamma = 0.5
 
-# Get abstracts
-arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
+# Get new abstracts from API
+# arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
+
+# Get abstracts from pre-downloaded data
+arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
+print(f"Loaded {N_arxiv} arXiv abstracts")
 
 # Split abstracts into train and test sets
 N_arxiv_train = int(round(0.5*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
