@@ -29,19 +29,19 @@ def idf(vocab,arxiv,snarxiv): #assumes abstracts pre-parsed, but in (N,1) array
                 dfs[i] += 1
                 dfs_arx += 1
         for abstract in snarxiv:
-            if word in abstract
+            if word in abstract:
                 dfs[i] += 1
                 dfs_snarx +=1
     
     idfs = np.log10((N_tot+1)/(dfs+1))
     idfs_arx = np.log10((N_arxiv+1)/(dfs_arx+1))
-    idfs_snarx = np.log10((
-    return np.log10((N_tot+1)/(dfs+1)),
+    idfs_snarx = np.log10((N_snarxiv+1)/(dfs_snarx+1))
+    return idfs,idfs_arx,idfs_snarx
 
 
 def tf(vocab, abstract):
     counts = np.zeros(vocab.shape)
-    tfs = np.zero(vocab.shape)
+    tfs = np.zeros(vocab.shape)
 
     for i,word in enumerate(vocab):
         if word in abstract:
@@ -67,7 +67,7 @@ def tf_idf(docs, vocab, idfs): #submit list/array of docs always
 
 
 
-idfs = idf(vocab,arxiv_train,snarxiv_train)
+idfs,_,_ = idf(vocab,arxiv_train,snarxiv_train)
 
 tf_idfs = tf_idf(arxiv_test, vocab, idfs)
 
