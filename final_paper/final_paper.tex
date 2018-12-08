@@ -86,13 +86,15 @@
 
 
 \section{Introduction} \label{sec:intro}
-The arXiv exposes its search API through a well-documented HTTP interface, but this has limitations in the context of our project as it is configured to find no more than 30000 results, and return no more than 2000 of them at a time.
-We estimate that \texttt{hep-th} has $\sim$85000 articles, and we'd ideally use all of them, so we need a more robust data acquisition tool.
-Fortunately, arXiv also furnishes an Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) interface, which is better-suited to full-repository harvesting. We use the \texttt{pyoai} module\footnote{\url{https://github.com/infrae/pyoai}} to retrieve the full metadata set from \texttt{hep-th}, extract the abstract text from the returned XML structure, and feed it to the parser, which normalizes it for analysis.
+The arXiv is a free online repository maintained by Cornell for preprints of scientific papers (many of which go on to be published in journals) from fields including mathematics, physics, and computer science.
+Submissions are moderated via an endorsement system to ensure that only legitimate papers are posted, making it a valuable resource for scientists in many disciplines. In many areas of theoretical physics, almost all new papers are posted to the arXiv before publication.
 
-The snarXiv abstracts are even easier to obtain, since we can generate them at will.
-We use a modified grammar file to produce only abstracts rather than titles and authors, then call the compiled snarXiv generator repeatedly to produce a corpus, which can be fed to the parser.
-(The snarXiv generator could of course be modified to produce the desired format in the first place, but we prefer to use as much of the original tool as possible.)
+The snarXiv is a computer program created by physicist David Simmons-Duffin that generates titles and abstracts in the style of arXiv's high-energy theory section (\texttt{hep-th}) using a context-free grammar.
+Simmons-Duffin created a browser game, ``arXiv vs. snarXiv,''\footnote{Now sadly defunct, it appears, but some results are summarized at \url{http://davidsd.org/2010/09/the-arxiv-according-to-arxiv-vs-snarxiv/}} in which readers are presented with two title/abstract pairs---one from \texttt{hep-th}, the other generated with snarXiv --- and are asked to choose which one is real.
+After 750,000 guesses, the success rate was only 59\%; i.e., people mistakenly identified a randomly-generated snarXiv title/abstract as real 41\% of the time.
+This turns out to be a task that humans are remarkably (and amusingly) bad at, so we here investigate whether machines are any better.
+
+In the first part of this report, we discuss the principles of our text representation (\S\ref{sec:LMs}) and classification (\S\ref{sec:classifiers}) schemes. In the second, we present the results of parameter tuning and final classification accuracies. Details of implementation are collected in Appendix~\ref{app:details}.
 
 
 \section{Implementation} \label{sec:implementation} % maybe should be in appendix
@@ -108,7 +110,7 @@ In the future we may try a more sophisticated approach where we deal with TeX co
 In any case, the output of our parsing procedure is two lists of lists (one arXiv, one snarXiv), where each inner list is comprised of formatted words from a single abstract.
 
 
-\section{Theory}
+\section{Theory} \label{sec:theory}
 Each of the abstract classification algorithms we use consists of three main parts: a parser, a language model, and a classifier.
 Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Section~\ref{sec:implementation}.
  
@@ -183,6 +185,9 @@ where $N$ is the number of documents in the training corpus, and $\mathrm{df}_i$
 %
 \footnote{Our definition of $\mathrm{idf}_i$ varies from that given in the reference by smoothing terms which deal with the possibility of developing features from a corpus smaller than the one that produced the vocabulary and prevent infinite logs.}
 
+The principle of tf--idf is to weight vector components according to their discriminating power: our representation should emphasize the most unique parts of documents.
+Accordingly, the inverse document frequency metric completely ignores a word that occurs in every document, but gives great weight to a word occurring only once in the corpus.
+Further, our term-frequency metric grows sublinearly, since a word occurring ten times is not necessarily ten times as important as one occurring singly.
 
 
 
@@ -194,10 +199,7 @@ where $N$ is the number of documents in the training corpus, and $\mathrm{df}_i$
 
 
 
-
-
-
-\subsection{Classifiers}
+\subsection{Classifiers} \label{sec:classifiers}
 \subsubsection{Naive Bayes classifier}
 Our first attempt at creating a program that distinguishes between arXiv and snarXiv abstracts utilized a naive Bayes (NB) classifier.
 The theory behind this classifier is simple: if $\P(Y=1|X) > \P(Y=-1|X)$, then we classify $X$ as snarXiv; otherwise, we classify it as arXiv.
@@ -368,7 +370,7 @@ computing probabilities: taking logs, normalizing by abstract length (perplexiti
 We defined our vocabulary $\V$ as the collection of $V=27,627$ unique words that appeared in a training corpus of 12,000 randomly chosen parsed arXiv abstracts and 12,000 (randomly generated) parsed snarXiv abstracts.
 
 
-\subsection{$n$-grams}
+\subsection{\texorpdfstring{$n$-grams}{n-grams}}
 It is fairly common for a word to appear in the test set that is not in the vocabulary.
 When this happens, we change the word to a special token \texttt{<UNK>}.
 We then treat \texttt{<UNK>} as we would any other word when counting $n$-gram occurrences $C_Y(\cdot)$.
