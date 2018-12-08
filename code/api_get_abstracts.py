@@ -10,7 +10,7 @@ import subprocess
 def my_parser(abstract):
   abstract = abstract.lower()    # no capitals
   abstract = abstract.replace('-',' ')
-  abstract = abstract.split()    # split on spaces and hyphens
+  abstract = abstract.split()    # split on spaces, newlines, and hyphens
   table = str.maketrans({key: None for key in string.punctuation}) # table to remove all punctuation
 
   parsed_abstract = ['<s>']
@@ -72,7 +72,8 @@ def get_arxiv(start,N):
 def get_stored_arxiv(N_arxiv):
     # data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_parsed.npy')
     data = np.load('/gscratch/stf/kowash/ml_project/data/arxiv_raw_abstracts.npy')
-    parsed_abstracts = [my_parser(abstract) for abstract in data[:N_arxiv]]
+    rand_abstracts = np.random.choice(data,N_arxiv,replace=False)
+    parsed_abstracts = [my_parser(abstract) for abstract in rand_abstracts]
     return parsed_abstracts
 
 

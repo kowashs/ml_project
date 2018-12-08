@@ -291,9 +291,41 @@ Several sources note that GANs are not naturally suited to contexts with discret
 
 \appendix
 \section{Technical details} \label{app:details}
-$n$-grams: test words not in vocabulary ('<UNK>'), begin/end sentence characters ('<s>','<e>')... more parsing details here?
+\subsection{Parsing abstract text}
+Our parser attempts to translate the raw abstract text (a string) to a list of formatted words that are easily identifiable between different abstracts.
+We first split the text on all spaces, newlines, and hyphens, and for uniformity we make all words lowercase.
+Next, we look for words that end in a period or question mark and insert the special word tokens \texttt{<e>} and \texttt{<s>} afterwards to mark the end of one sentence and the start of another.
+Lastly, we strip out all punctuation (except for the special tokens), prepend \texttt{<s>} to the list (marking the start of the first sentence), and delete the last word if the list ends \texttt{<e>} \texttt{<s>} (otherwise, we append \texttt{<e>}).
 
+An example of parser input/output is
+
+Input: \texttt{``I'm taking a CSE class on machine-learning.\ It's a lot of work, but pretty interesting.''}
+
+Output: \texttt{[<s>, im, taking, a, cse, class, on, machine, learning, <e>, <s>, its, a, lot, of, work, but, pretty, interesting, <e>]}, 
+
+where each ``word'' in the output list is a string.
+
+Our parsing scheme works well, but it leaves traces of some TeX commands from the raw abstract text; for example, it sends \texttt{\textbackslash mathbb\{Z\} $\to$ mathbbz}.
+This would be fine if all arXiv and snarXiv abstracts have TeX commands written the same way, though it is possible in some cases for abstracts to write the same command in different ways. In practice, we find that these instances are rare enough for the concern to be negligible.
+
+\subsection{Managing probabilities numerically}
+Since the true abstract probabilities $\P(X|Y)$
 computing probabilities: taking logs, normalizing by abstract length (perplexities?)
+
+\subsection{Vocabulary}
+We defined our vocabulary $\V$ as the collection of $V=27,627$ unique words that appeared in a training corpus of 12,000 randomly chosen parsed arXiv abstracts and 12,000 (randomly generated) parsed snarXiv abstracts.
+
+
+\subsection{$n$-grams}
+It is fairly common for a word to appear in the test set that is not in the vocabulary.
+When this happens, we change the word to a special token \texttt{<UNK>}.
+We then treat \texttt{<UNK>} as we would any other word when counting $n$-gram occurrences $C_Y(\cdot)$.
+
+We prepend copies of the start sentence token \texttt{<s>} to each parsed abstract to ensure that the first $n$-gram consists of $n-1$ copies of \texttt{<s>} and one ``real'' word.
+Similarly, we append copies of \texttt{<e>} to the end of each parsed abstract.
+
+
+
 
 
 

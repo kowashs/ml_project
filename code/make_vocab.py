@@ -41,21 +41,22 @@ def make_vocab(arxiv_abstracts, snarxiv_abstracts):
 
     if i%1000==0:
       print(f"Processed {i+1} snarXiv abstracts")
-  # Only put words occurring multiple times into the vocabulary (not sure if smart or not)
-  # vocab = []
-  # bad_words = np.array([0,0])
-  # for word in dict:
-  #   if sum(dict[word])==1:
-  #     bad_words += dict[word]
-  #   else:
-  #     vocab.append(word)
-  #vocab = [word for word in dict if sum(dict[word]) > 1]
-  #print(len(dict))
-  #print(len(vocab))
-  #print(bad_words)
+
+  #Only put words occurring multiple times into the vocabulary (not sure if smart or not)
+  vocab = []
+  bad_words = np.array([0,0])
+  for word in dict:
+    if sum(dict[word])<=1:
+      bad_words += dict[word]
+    else:
+      vocab.append(word)
+  vocab = [word for word in dict if sum(dict[word]) > 1]
+  print(len(dict))
+  print(len(vocab))
+  print(bad_words)
 
   # Put all words in vocabulary
-  vocab = [word for word in dict]
+  #vocab = [word for word in dict]
   return vocab
 
 ###############################################################################
@@ -76,7 +77,7 @@ print(f"Loaded {N_arxiv} arXiv abstracts")
 
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
-# Create vocabulary and save to file (currently contains 27,627 words)
+# Create vocabulary and save to file (currently contains 15,315 words)
 vocab = make_vocab(arxiv_abstracts,snarxiv_abstracts)
 np.savez('big_vocab',vocab=vocab)
 
