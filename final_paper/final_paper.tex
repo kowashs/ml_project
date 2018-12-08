@@ -249,7 +249,7 @@ On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making
 
 
 
-\section{Extensions}
+\section{Conclusions}
 \subsection{Feature development}
 Currently, our feature model represents a given abstract as a dictionary of occurrence counts for each word in the abstract and each word known from the training corpus.
 This is called a bag-of-words model and is completely insensitive to word order, meaning that it is impossible for a classifier to take into account word co-occurrence rates or sentence position, which obviously contain most of the information in natural language.
@@ -308,12 +308,11 @@ where each ``word'' in the output list is a string.
 Our parsing scheme works well, but it leaves traces of some TeX commands from the raw abstract text; for example, it sends \texttt{\textbackslash mathbb\{Z\} $\to$ mathbbz}.
 This would be fine if all arXiv and snarXiv abstracts have TeX commands written the same way, though it is possible in some cases for abstracts to write the same command in different ways. In practice, we find that these instances are rare enough for the concern to be negligible.
 
-\subsection{Managing probabilities numerically}
-Since the true abstract probabilities $\P(X|Y)$
-computing probabilities: taking logs, normalizing by abstract length (perplexities?)
 
 \subsection{Vocabulary}
-We defined our vocabulary $\V$ as the collection of $V=27,627$ unique words that appeared in a training corpus of 12,000 randomly chosen parsed arXiv abstracts and 12,000 (randomly generated) parsed snarXiv abstracts.
+We defined our vocabulary $\V$ as the collection of $V=15,315$ unique words that appeared at least twice in a training corpus of 12,000 randomly chosen parsed arXiv abstracts and 12,000 (randomly generated) parsed snarXiv abstracts.
+We decided not to include the 13,960 words that only appeared once since they seem to be relatively uncommon (often they are the residuals of TeX commands), and including them would nearly double our vocabulary size.
+This pruning can be thought of as a feature-processing step.
 
 
 \subsection{$n$-grams}
@@ -324,7 +323,20 @@ We then treat \texttt{<UNK>} as we would any other word when counting $n$-gram o
 We prepend copies of the start sentence token \texttt{<s>} to each parsed abstract to ensure that the first $n$-gram consists of $n-1$ copies of \texttt{<s>} and one ``real'' word.
 Similarly, we append copies of \texttt{<e>} to the end of each parsed abstract.
 
-
+\subsection{Managing probabilities numerically}
+Consider an abstract $X$ from source $Y$.
+A typical arXiv/snarXiv abstract contains roughly 100 words, so the abstract probability $\P(X|Y)=\prod_{i=1}^N \P(w_i|w_1^{i-1},Y)$ is a product of $N\approx100$ different word probabilities, each of which is typically much less than one.
+As a result, the size of $\P(X|Y)$ is heavily dependent on the abstract length and is usually extremely small, easily hitting numerical underflow in some cases.
+To combat the issue of length dependence, we prefer to work with the perplexity
+\begin{align}
+	\text{PP}(X|Y) \equiv \sqrt[N]{\frac{1}{\P(X|Y)}} = \left[ \prod_{i=1}^N \P(w_i|w_1^{i-1},Y) \right]^{-1/N},
+\end{align}
+which normalizes the abstract probability by taking the geometric mean of the individual word probabilities (and inverting).
+To prevent numerical underflow from rendering our algorithms useless, we always work with logs of probabilities in our code, which turns products into sums and keeps the numbers reasonable.
+Note that the log of the perplexity is a simple arithmetic mean:
+\begin{align}
+	\log\text{PP}(X|Y) = -\frac{1}{N}\log\P(X|Y) = -\frac{1}{N} \sum_{i=1}^N \log\P(w_i|w_1^{i-1},Y).
+\end{align}
 
 
 

@@ -146,7 +146,7 @@ arxiv_test = arxiv_abstracts[N_arxiv_train:]
 snarxiv_train = snarxiv_abstracts[:N_snarxiv_train]
 snarxiv_test = snarxiv_abstracts[N_snarxiv_train:]
 
-# Load vocabulary (currently contains 11645 words)
+# Load vocabulary
 vocab = np.load('big_vocab.npz')['vocab']
 
 # Get word probabilities from training set
@@ -227,7 +227,7 @@ plt.gca().set_xscale("log")
 #plt.gca().set_yscale("log")
 
 plt.legend([r'$X\in$arXiv',r'$X\in$snarXiv'])
-plt.xlabel('$P(X|$arXiv$)/P(X|$snarXiv$)$')
+plt.xlabel('PP$(X|$snarXiv$)/$PP$(X|$arXiv$)$')
 plt.ylabel('Number of abstracts')
 
 plt.axvline(0.67, color='k', linestyle='dashed', linewidth=1)
@@ -237,23 +237,3 @@ plt.text(0.67 + 0.067,
          r'$\eta=0.67$')
 plt.savefig('../figures/bigram_histogram.png')
 plt.close()
-
-
-# # Make histogram of word probabilities
-# # WRONG THING! want P(X|arx)/P(X|snarx) when X is an arxiv/snarxiv abstract
-# P_arxiv_words = [P_dict[word][0] for word in P_dict]
-# P_snarxiv_words = [P_dict[word][1] for word in P_dict]
-#
-# my_bins = np.logspace(-6,0, 50)
-#
-# plt.figure()
-# plt.hist(P_arxiv_words,bins=my_bins,alpha=0.5)
-# plt.hist(P_snarxiv_words,bins=my_bins,alpha=0.5)
-# plt.gca().set_xscale("log")
-# #plt.gca().set_yscale("log")
-#
-# plt.legend(['arXiv','snarXiv'])
-# plt.xlabel('$P(w|Y)$')
-# plt.ylabel('Number of words')
-# plt.savefig('../figures/histogram.png')
-# plt.close()

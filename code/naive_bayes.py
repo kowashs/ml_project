@@ -96,8 +96,6 @@ def classify(abstract, P_dict,N_arxiv_words,N_snarxiv_words,P_arxiv, vocab):
 # Choose how many abstracts to get (train+test)
 N_arxiv = 1000	    # must be <2000
 N_snarxiv = 1000
-# Choose where to start pulling papers in the arxiv search results
-arxiv_start = 1500   # must be <30000-N_arxiv
 
 # Get abstracts
 arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
@@ -105,8 +103,8 @@ print(f"Loaded {N_arxiv} arXiv abstracts")
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
 # Split abstracts into train and test sets
-N_arxiv_train = int(round(0.8*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
-N_snarxiv_train = int(round(0.8*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
+N_arxiv_train = int(round(0.1*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
+N_snarxiv_train = int(round(0.1*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
 
 arxiv_train = arxiv_abstracts[:N_arxiv_train]
 arxiv_test = arxiv_abstracts[N_arxiv_train:]
@@ -114,7 +112,7 @@ arxiv_test = arxiv_abstracts[N_arxiv_train:]
 snarxiv_train = snarxiv_abstracts[:N_snarxiv_train]
 snarxiv_test = snarxiv_abstracts[N_snarxiv_train:]
 
-# Load vocabulary (currently contains 11645 words)
+# Load vocabulary
 vocab = np.load('vocab.npz')['vocab']
 
 # Get word probabilities from training set
