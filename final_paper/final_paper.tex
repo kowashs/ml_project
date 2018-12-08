@@ -29,10 +29,13 @@
 \usepackage{graphicx}
 
 
-\title{Project Milestone: arXiv vs. snarXiv}
+\title{arXiv vs. snarXiv}
 
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\V}{\mathcal{V}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+
 
 % The \author macro works with any number of authors. There are two
 % commands used to separate the names and addresses of multiple
@@ -110,39 +113,83 @@ Each of the abstract classification algorithms we use consists of three main par
 Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Section~\ref{sec:implementation}.
  
 \subsection{Language models} \label{sec:LMs}
-\subsubsection{$n$-grams}
+\subsubsection{\texorpdfstring{$n$-grams}{n-grams}}
 Assume that each abstract $X$ has a probability $\P(X|Y)$ of being from source $Y\in\{-1,1\}$, where $Y=1$ represents the label ``snarXiv'' and  $Y=-1$ represents the label ``arXiv.''
 Suppose $X=(w_1,w_2,\ldots,w_N)$ is an abstract containing $N$ words $\{w_i\}_{i=1}^N$, and let $w_i^{i+k}$ denote the word sequence $(w_i,w_{i+1},\ldots, w_{i+k})$.
 The $n$-grams language model approximates $\P(X|Y)$ as
+%
 \begin{align}
 	\P(X|Y) = \P(w_1^N|Y) &= \prod_{i=1}^N \P(w_i|w_1^{i-1},Y)
 	\\
 	&\approx \prod_{i=1}^N \P(w_i| w_{i-n+1}^{i-1},Y) \quad\; (n\text{-grams approx.})
 \end{align}
+%
 In other words, in the $n$-grams model we assume that the probability of a given word $w$ occurring in some abstract only depends on what the previous $n-1$ words in the abstract are, where $n$ is some (typically small) positive integer; the $n-1$ words on which $w$ depends are called the ``context'' of $w$.
 
 In the simplest case $n=1$, each word occurrence is assumed to be completely independent of any context, which is why the 1-gram language model is often referred to as the ``bag-of-words'' (BoW) model.
 Given some training set of abstracts from source $Y$, we define our BoW training estimate $\widehat\P(X|Y)_\text{BoW}$ as
+%
 \begin{align}
   \widehat\P(X|Y)_\text{BoW} &=  \widehat\P(w_1^N|Y)_\text{BoW} \equiv \prod_{i=1}^N \widehat\P(w_i|Y), \\
   \text{where } \quad \widehat\P(w_i|Y) &\equiv \frac{C_Y(w_i)+1}{\sum_w [C_Y(w)+1]} = \frac{C_Y(w_i)+1}{\sum_{w\in\V} C_Y(w)+V},
 \end{align}
+%
 $C_Y(w_i)$ is the number of times that $w_i$ appears, $\V$ is a vocabulary of size $V=|\V|$ containing all of the words that we wish to learn about, and $\sum_{w\in\V} C_Y(w)$ is the total number of words in the training set.
 The extra $+1$ on each word count $C_Y(w)$ comes from Laplace smoothing, which is a precautionary measure taken to prevent zero probabilities from occurring in cases where we need to classify an abstract that contains a word that did not appear in the training set.
 Other technical details regarding bag-of-words and $n$-grams implementation can be found in Appendix~\ref{app:details}. 
 
 The generalization to $n>1$ is straightforward: we define our estimate $\widehat\P(X|Y)_{n\text{-gram}}$ for a given training set from source $Y$ to be
+%
 \begin{align}
 	\widehat\P(X|Y)_{n\text{-gram}} = \widehat\P(w_1^N|Y)_{n\text{-gram}} &\equiv \prod_{i=1}^N \widehat\P(w_i| w_{i-n+1}^{i-1},Y),
 	\\
 	\text{where } \quad \widehat\P(w_i|w_{i-n+1}^{i-1},Y) &\equiv \frac{C_Y(w_{i-n+1}^i)+1}{C_Y(w_{i-n+1}^{i-1})+V},
 \end{align}
+%
 $C_Y(w_{i-n+1}^i)$ is the number of times that the $n$-gram $w_{i-n+1}^i$ occurs, and $C_Y(w_{i-n+1}^{i-1})$ is the number of times that the $(n-1)$-gram $w_{i-n+1}^{i-1}$ appears.
 
 
 
 
 \subsubsection{tf--idf}
+The family of $n$-gram models can be used to produce term probabilities for naive Bayes or likelihood-ratio testing, but they also induce perfectly good $\tfrac{V!}{(V-n)!}$-dimensional vector representations of documents, where each entry records the occurrence of a given $n$-gram in the document.
+These vectors are large, but fairly sparse, and make rudimentary features for regression or clustering algorithms.
+
+However, the \emph{semantic} model implied by raw count vectors is extremely crude. For example, ubiquitous words like ``the'', ``and'', and ``of'' are assigned great weight, and pull most document vectors in a handful of directions, distorting the representation space in a way that can make clusters harder to separate.
+This motivates a weighting scheme that recognizes words more unique to particular documents or classes; in particular, we developed feature vectors using the term-frequency--inverse-document-frequency (tf--idf) scheme as described in \citet[ch. 6]{jurafsky2014speech}.
+
+Each entry $d_i$ in a document vector $d$ corresponds to a term $w_i$ in the vocabulary and receives a weight
+%
+\begin{align}
+  d_i &= \mathrm{tf}_{i,d} \cdot \mathrm{idf}_{i}.
+\end{align}
+%
+We define
+%
+\begin{align}
+  \mathrm{tf}_{i,d} &\equiv \begin{cases}
+                         1 + \log_{10}C_{i,d} &:\quad C_{i,d} > 0\\
+                         0 &:\quad\text{else}
+                       \end{cases},
+\end{align}
+%
+where $C_{i,d}$ is the number of occurrences of $w_i$ in the document $d$, and
+%
+\begin{align}
+  \mathrm{idf}_i &\equiv \log_{10} \frac{N+1}{\mathrm{df}_i + 1},
+\end{align}
+%
+where $N$ is the number of documents in the training corpus, and $\mathrm{df}_i$ is the number of documents containing $w_i$.
+%
+\footnote{Our definition of $\mathrm{idf}_i$ varies from that given in the reference by smoothing terms which deal with the possibility of developing features from a corpus smaller than the one that produced the vocabulary and prevent infinite logs.}
+
+
+
+
+
+
+
+
 
 
 
@@ -155,9 +202,11 @@ $C_Y(w_{i-n+1}^i)$ is the number of times that the $n$-gram $w_{i-n+1}^i$ occurs
 Our first attempt at creating a program that distinguishes between arXiv and snarXiv abstracts utilized a naive Bayes (NB) classifier.
 The theory behind this classifier is simple: if $\P(Y=1|X) > \P(Y=-1|X)$, then we classify $X$ as snarXiv; otherwise, we classify it as arXiv.
 We can use Bayes' theorem $\P(Y|X) = \frac{\P(Y)\P(X|Y)}{\P(X)}$ to rewrite this classification condition as
+%
 \begin{align}
 	\widehat{Y}_{NB} \equiv \arg\max_{Y\in\{-1,1\}} \P(Y)\P(X|Y). \label{eq:Bayes}
 \end{align}
+%
 We estimate each probability in \eqref{eq:Bayes} by training on a large number of arXiv and snarXiv abstracts.
 We define our estimate%
 \footnote{The probabilities $\P(Y=\pm1)$ are somewhat trivial since we generate the snarXiv abstracts ourselves and can control over how many arXiv vs. snarXiv abstracts will be in the train and test sets. Since the snarXiv was originally created to make abstracts that compete one-on-one with arXiv abstracts, we chose to set $\P(Y=\pm1)=\tfrac{1}{2}$ for all tests reported in this paper.}
@@ -172,10 +221,13 @@ A slightly more sophisticated classification rule is the likelihood-ratio (LR) t
 For a given abstract $X$, define the likelihood ratio $\Lambda(X)\equiv\frac{\P(X|Y=1)}{\P(X|Y=-1)}$.
 While we certainly want our classifier to correctly label all snarXiv abstracts as fakes, we also want to minimize the probability that an arXiv abstract gets incorrectly classified as fake.
 The Neyman-Pearson lemma states that the optimal classifier
+%
 \begin{align}
 	\delta_{LR}^* \equiv \arg\max_\delta \P(\delta(X)=1|Y=1), \text{\; subject to \;} \P(\delta(X)=1|Y=-1)\leq \alpha
 \end{align}
+%
 for any fixed false-positive tolerance $\alpha$ takes the form
+%
 \begin{align}
 	\P\left(\delta_{LR}^*(X)=1\right) =
 	\begin{cases}
@@ -184,6 +236,7 @@ for any fixed false-positive tolerance $\alpha$ takes the form
 		0, 	& \Lambda(X) < \eta,
 	\end{cases}
 \end{align}
+%
 where $\eta$ and $\gamma$ can be treated as hyperparameters to be tuned in cross-validation.
 In practice, $\gamma$ is almost completely irrelevant since for any $\eta$, the odds that a language model like $n$-grams would yield an estimate for $\Lambda(X)$ that is \textit{exactly} equal to $\eta$ are essentially zero.%
 \footnote{The borderline case of the naive Bayes classifier where $\P(Y=\pm1|X)=\frac{1}{2}$ is irrelevant for the same reason.}
@@ -201,7 +254,6 @@ We arbitrarily use $\gamma=0.5$, meaning the only hyperparameter we tune is $\et
 
 
 \section{Results}
-
 Testing the method on new abstracts after training on 800 arXiv and 800 snarXiv abstracts, we find that the algorithm correctly classifies an abstract as arXiv or snarXiv roughly 85\% of the time.
 This accuracy is not fantastic (which is to be expected given the simplicity of the model), but it is higher than we expected, and is already well higher than the average human classification accuracy of 57\%.%
 \footnote{According to \url{http://snarxiv.org/vs-arxiv/highscores/}}
@@ -249,7 +301,7 @@ On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making
 
 
 
-\section{Conclusions}
+\section{Extensions}
 \subsection{Feature development}
 Currently, our feature model represents a given abstract as a dictionary of occurrence counts for each word in the abstract and each word known from the training corpus.
 This is called a bag-of-words model and is completely insensitive to word order, meaning that it is impossible for a classifier to take into account word co-occurrence rates or sentence position, which obviously contain most of the information in natural language.
@@ -308,11 +360,12 @@ where each ``word'' in the output list is a string.
 Our parsing scheme works well, but it leaves traces of some TeX commands from the raw abstract text; for example, it sends \texttt{\textbackslash mathbb\{Z\} $\to$ mathbbz}.
 This would be fine if all arXiv and snarXiv abstracts have TeX commands written the same way, though it is possible in some cases for abstracts to write the same command in different ways. In practice, we find that these instances are rare enough for the concern to be negligible.
 
+\subsection{Managing probabilities numerically}
+Since the true abstract probabilities $\P(X|Y)$
+computing probabilities: taking logs, normalizing by abstract length (perplexities?)
 
 \subsection{Vocabulary}
-We defined our vocabulary $\V$ as the collection of $V=15,315$ unique words that appeared at least twice in a training corpus of 12,000 randomly chosen parsed arXiv abstracts and 12,000 (randomly generated) parsed snarXiv abstracts.
-We decided not to include the 13,960 words that only appeared once since they seem to be relatively uncommon (often they are the residuals of TeX commands), and including them would nearly double our vocabulary size.
-This pruning can be thought of as a feature-processing step.
+We defined our vocabulary $\V$ as the collection of $V=27,627$ unique words that appeared in a training corpus of 12,000 randomly chosen parsed arXiv abstracts and 12,000 (randomly generated) parsed snarXiv abstracts.
 
 
 \subsection{$n$-grams}
@@ -323,20 +376,7 @@ We then treat \texttt{<UNK>} as we would any other word when counting $n$-gram o
 We prepend copies of the start sentence token \texttt{<s>} to each parsed abstract to ensure that the first $n$-gram consists of $n-1$ copies of \texttt{<s>} and one ``real'' word.
 Similarly, we append copies of \texttt{<e>} to the end of each parsed abstract.
 
-\subsection{Managing probabilities numerically}
-Consider an abstract $X$ from source $Y$.
-A typical arXiv/snarXiv abstract contains roughly 100 words, so the abstract probability $\P(X|Y)=\prod_{i=1}^N \P(w_i|w_1^{i-1},Y)$ is a product of $N\approx100$ different word probabilities, each of which is typically much less than one.
-As a result, the size of $\P(X|Y)$ is heavily dependent on the abstract length and is usually extremely small, easily hitting numerical underflow in some cases.
-To combat the issue of length dependence, we prefer to work with the perplexity
-\begin{align}
-	\text{PP}(X|Y) \equiv \sqrt[N]{\frac{1}{\P(X|Y)}} = \left[ \prod_{i=1}^N \P(w_i|w_1^{i-1},Y) \right]^{-1/N},
-\end{align}
-which normalizes the abstract probability by taking the geometric mean of the individual word probabilities (and inverting).
-To prevent numerical underflow from rendering our algorithms useless, we always work with logs of probabilities in our code, which turns products into sums and keeps the numbers reasonable.
-Note that the log of the perplexity is a simple arithmetic mean:
-\begin{align}
-	\log\text{PP}(X|Y) = -\frac{1}{N}\log\P(X|Y) = -\frac{1}{N} \sum_{i=1}^N \log\P(w_i|w_1^{i-1},Y).
-\end{align}
+
 
 
 
