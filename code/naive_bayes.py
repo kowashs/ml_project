@@ -20,18 +20,20 @@ def train(arxiv_abstracts, snarxiv_abstracts, vocab):
     N_arxiv_words += len(abstract)
     for word in abstract:
       if word not in vocab:
-        word = '<UNK>' # special character for words not in the vocabulary
-      dict.setdefault(word,np.array([0,0]))
-      dict[word][0] += 1
+        pass #word = '<UNK>' # special character for words not in the vocabulary
+      else:
+        dict.setdefault(word,np.array([0,0]))
+        dict[word][0] += 1
 
   N_snarxiv_words = 0       # total # of words in arxiv training set
   for abstract in snarxiv_abstracts:
     N_snarxiv_words += len(abstract)
     for word in abstract:
       if word not in vocab:
-        word = '<UNK>' # special character for words not in the vocabulary
-      dict.setdefault(word,np.array([0,0]))
-      dict[word][1] += 1
+        pass #word = '<UNK>' # special character for words not in the vocabulary
+      else:
+        dict.setdefault(word,np.array([0,0]))
+        dict[word][1] += 1
 
   # arxiv_words = 0       # total # of words in arxiv training set
   # new_words=0
@@ -76,8 +78,8 @@ def classify(abstract, P_dict,N_arxiv_words,N_snarxiv_words,P_arxiv, vocab):
   log_P_abstract_source = np.array([0.,0.])
   for word in abstract:
     if word not in vocab:
-      word = '<UNK>'
-    if word in P_dict:
+      pass  #word = '<UNK>'
+    elif word in P_dict:
       log_P_abstract_source += np.log(P_dict[word])
     else:
       log_P_abstract_source += np.log(np.array([1/(N_arxiv_words+V),1/(N_snarxiv_words+V)]))
@@ -91,11 +93,11 @@ def classify(abstract, P_dict,N_arxiv_words,N_snarxiv_words,P_arxiv, vocab):
 
 
 ###############################################################################
-# Larry test: Is this garbage?
+# Test model
 ###############################################################################
 # Choose how many abstracts to get (train+test)
-N_arxiv = 1000	    # must be <2000
-N_snarxiv = 1000
+N_arxiv = 2000
+N_snarxiv = 2000
 
 # Get abstracts
 arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
@@ -103,8 +105,8 @@ print(f"Loaded {N_arxiv} arXiv abstracts")
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
 # Split abstracts into train and test sets
-N_arxiv_train = int(round(0.1*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
-N_snarxiv_train = int(round(0.1*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
+N_arxiv_train = int(round(0.5*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
+N_snarxiv_train = int(round(0.5*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
 
 arxiv_train = arxiv_abstracts[:N_arxiv_train]
 arxiv_test = arxiv_abstracts[N_arxiv_train:]

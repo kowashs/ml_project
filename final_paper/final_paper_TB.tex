@@ -27,6 +27,8 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage{graphicx}
+\usepackage{subcaption}
+
 
 
 \title{arXiv vs. snarXiv}
@@ -94,12 +96,9 @@
 
 
 
-\section{Theory}
-Each of the abstract classification algorithms we use consists of three main parts: a parser, a language model, and a classifier.
-Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Appendix~\ref{app:parsing}.
  
-\subsection{Language models} \label{sec:LMs}
-\subsubsection{$n$-grams} \label{sec:n-grams}
+\section{Language models} \label{sec:LMs}
+\subsection{$n$-grams} \label{sec:n-grams}
 Assume that each abstract $X$ has a probability $\P(X|Y)$ of being from source $Y\in\{-1,1\}$, where $Y=1$ represents the label ``snarXiv'' and  $Y=-1$ represents the label ``arXiv.''
 Suppose $X=(w_1,w_2,\ldots,w_N)$ is an abstract containing $N$ words $\{w_i\}_{i=1}^N$, and let $w_i^{i+k}$ denote the word sequence $(w_i,w_{i+1},\ldots, w_{i+k})$.
 The $n$-grams language model approximates $\P(X|Y)$ as
@@ -118,7 +117,7 @@ Given some training set of abstracts from source $Y$, we define our BoW training
 \end{align}
 $C_Y(w_i)$ is the number of times that $w_i$ appears, $\V$ is a vocabulary of size $V=|\V|$ containing all of the words that we wish to learn about, and $\sum_{w\in\V} C_Y(w)$ is the total number of words in the training set.
 The extra $+1$ on each word count $C_Y(w)$ comes from Laplace smoothing, which is a precautionary measure taken to prevent zero probabilities from occurring in cases where we need to classify an abstract that contains a word that did not appear in the training set.
-Other technical details regarding bag-of-words and $n$-grams implementation can be found in Appendix~\ref{app:details}. 
+Other technical details regarding bag-of-words and $n$-grams implementation (including parsing) can be found in Appendix~\ref{app:details}. 
 
 The generalization to $n>1$ is straightforward: we define our estimate $\widehat\P(X|Y)_{n\text{-gram}}$ for a given training set from source $Y$ to be
 \begin{align}
@@ -143,7 +142,7 @@ Note that the log of the perplexity is a simple arithmetic mean:
 In practice, we use the logs of the classification conditions given below in Section~\ref{sec:classifiers} to classify our test abstracts as arXiv or snarXiv; we only exponentiate back to perplexities for the purposes of figures.
 
 
-\subsubsection{tf--idf}
+\subsection{tf--idf}
 
 
 
@@ -151,8 +150,8 @@ In practice, we use the logs of the classification conditions given below in Sec
 
 
 
-\subsection{Classifiers} \label{sec:classifiers}
-\subsubsection{Naive Bayes classifier}
+\section{Classifiers} \label{sec:classifiers}
+\subsection{Naive Bayes classifier}
 Our first attempt at creating a program that distinguishes between arXiv and snarXiv abstracts utilized a naive Bayes (NB) classifier.
 The theory behind this classifier is simple: if $\P(Y=1|X) > \P(Y=-1|X)$, then we classify $X$ as snarXiv; otherwise, we classify it as arXiv.
 We can use Bayes' theorem $\P(Y|X) = \frac{\P(Y)\P(X|Y)}{\P(X)}$ to rewrite this classification condition as
@@ -168,7 +167,7 @@ The conditional probabilities $\P(X|Y)$ are more complicated, and are approximat
 
 
 
-\subsubsection{Likelihood-ratio test}
+\subsection{Likelihood-ratio test}
 A slightly more sophisticated classification rule is the likelihood-ratio (LR) test.
 For a given abstract $X$, define the likelihood ratio $\Lambda(X)\equiv\frac{\P(X|Y=1)}{\P(X|Y=-1)}$.
 While we certainly want our classifier to correctly label all snarXiv abstracts as fakes, we also want to minimize the probability that an arXiv abstract gets incorrectly classified as fake.
@@ -197,48 +196,44 @@ The relevant parameter in the LR-test is thus $\eta^{1/|X|}$. We would like our 
 
 \section{Results}
 We report results for three different algorithms: bag-of-words model with naive Bayes classifer (BoW-NB), bag-of-words model with likelihood-ratio test (BoW-LR), and bigrams=(2-grams) model with likelihood-ratio test (bi-LR).
-In each case, we trained on an equal number $N_\text{train}^Y$ of arXiv and snarXiv abstracts, and we tested on 5000 arXiv abstracts and 5000 snarXiv abstracts.
+In each case, we trained on an equal number $N_\text{train}^Y=1000$ of arXiv and snarXiv abstracts, and we also tested on 1000 arXiv abstracts and 1000 snarXiv abstracts.
 %
 % Add tf-idf stuff?
 %
 
-For BoW-NB, we varied $N_\text{train}^Y$ and examined how the classification error changed...
+For BoW-NB, we found the classification accuracy to be 77\%, with the only misclassifications being false positives (arXiv abstracts that the classifier mistakes as snarXiv); when a snarXiv abstract is tested, it is correctly identified as snarXiv 100\% of the time.
+This is somewhat expected for a classifier which does nothing to constrain the false-positive rate.
 
 For BoW-LR and bi-LR, we tuned the LR-hyperparameter $\eta_\text{PP}$ through cross-validation to maximize the classification accuracy on abstracts from both arXiv and snarXiv.
-We found $\eta_{\text{PP}}=0.7$ to perform best in both models; the true positive rate (TPR) vs. false discovery rate (FDR) is plotted in Figure~\ref{BoW_TPR_FDR}.
-We also made histograms of $\frac{\text{PP}(X|snarXiv)}{\text{PP}(X|arXiv)}$, which shows exactly how the ...
+We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{histograms} shows histograms of our estimates for $\frac{\text{PP}(X|\text{snarXiv})}{\text{PP}(X|\text{arXiv})}$ 
 
 
 
 
 
-%Testing the method on new abstracts after training on 800 arXiv and 800 snarXiv abstracts, we find that the algorithm correctly classifies an abstract as arXiv or snarXiv roughly 85\% of the time.
-%This accuracy is not fantastic (which is to be expected given the simplicity of the model), but it is higher than we expected, and is already well higher than the average human classification accuracy of 57\%.%
-%\footnote{According to \url{http://snarxiv.org/vs-arxiv/highscores/}}
-%Looking a little more closely at the results, we find that the only misclassifications made are arXiv abstracts that the classifier mistakes as snarXiv -- when a snarXiv abstract is tested, it is correctly identified as snarXiv 100\% of the time.
-%The explanation for this finding is relatively simple: snarXiv only has about 1000 unique words that it pulls from when generating fake abstracts, so each of these words occurs with a significant probability.
-%Any reasonably large training set exposes this, and thus the classifier has no problem identifying snarXiv abstracts correctly.
-%On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making for lower individual word probabilities), and thus the classifier can struggle when an arXiv abstract contains several snarXiv words.
 
 
 
+%\begin{figure}[!htbp]
+%\centering
+%	\includegraphics[width=0.48\textwidth]{../figures/FDR_TPR_plot_BOW.png}
+%%\caption{LR-classifier using bag-of-words model.}
+%\end{figure}
 
-\begin{figure}[!htbp]
+\begin{figure}[!htbp] \label{histograms}
 \centering
-	\includegraphics[width=0.48\textwidth]{../figures/FDR_TPR_plot.png}
-	%\caption{LR-classifier using bag-of-words model.}
-\end{figure}
-
-
-
-\begin{figure}[!htbp]
-\centering
-	\includegraphics[width=0.48\textwidth]{../figures/BOW_histogram.png}
-	%\caption{LR-classifier using bag-of-words model.}
+\begin{subfigure}[t]{0.48\textwidth}
+	\includegraphics[width=\textwidth]{../figures/BOW_histogram.png}
+	\caption{BoW-LR model}
+\end{subfigure}
 	\hfill
-	\includegraphics[width=0.48\textwidth]{../figures/bigram_histogram.png}
-	%\caption{LR-classifier using bigram model.}
+\begin{subfigure}[t]{0.48\textwidth}
+	\includegraphics[width=\textwidth]{../figures/bigram_histogram.png}
+	\caption{bi-LR model}
+\end{subfigure}
+\caption{Perplexity ratio histograms for both LR-models. The dotted black line corresponds to $\eta_\text{PP}=0.7$.}
 \end{figure}
+
 
 
 

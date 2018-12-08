@@ -79,18 +79,18 @@ def classify(abstract,P_dict,N_arxiv_words,N_snarxiv_words, eta,gamma, vocab):
 # Apply to test data
 ###############################################################################
 # Choose how many abstracts to get
-N_arxiv_train = 100
-N_snarxiv_train = 100
+N_arxiv_train = 1000
+N_snarxiv_train = 1000
 
-N_arxiv_test = 500
-N_snarxiv_test = 500
+N_arxiv_test = 1000
+N_snarxiv_test = 1000
 
 N_arxiv = N_arxiv_train + N_arxiv_test
 N_snarxiv = N_snarxiv_train + N_snarxiv_test
 
 
 # Choose LR parameters eta & gamma
-#eta_list = np.round(10**np.arange(-0.5,0.5,0.1),2)
+#eta_list = sorted([0.7,np.round(10**np.arange(-0.5,0.5,0.1),2)])
 eta_list = [0.7]
 gamma = 0.5
 
@@ -208,26 +208,29 @@ eta_best = eta_list[i_best]
 print(eta_min, eta_max)
 print(round(PP_eta_min,2),round(PP_eta_max,2))
 
-# Make histogram of P(X|arx)/P(X|snarx) (X is an arxiv/snarxiv abstract)
-my_bins = np.logspace(-1,1, 100)
+if eta_list==[0.7]:
+  # Make histogram of P(X|arx)/P(X|snarx) (X is an arxiv/snarxiv abstract)
+  my_bins = np.logspace(-1,1, 100)
 
-plt.figure()
-plt.hist(np.exp(log_ratio_snarxiv_list),alpha=0.5)
-plt.hist(np.exp(log_ratio_arxiv_list),alpha=0.5)
-# plt.hist(np.exp(log_ratio_snarxiv_list),bins=my_bins,alpha=0.5)
-# plt.hist(np.exp(log_ratio_arxiv_list),bins=my_bins,alpha=0.5)
-plt.gca().set_xscale("log")
-#plt.gca().set_yscale("log")
+  np.savez('BOW_data',)
+  plt.figure()
+  # plt.hist(np.exp(log_ratio_snarxiv_list),alpha=0.5)
+  # plt.hist(np.exp(log_ratio_arxiv_list),alpha=0.5)
+  plt.hist(np.exp(log_ratio_snarxiv_list),bins=my_bins,alpha=0.5)
+  plt.hist(np.exp(log_ratio_arxiv_list),bins=my_bins,alpha=0.5)
+  plt.gca().set_xscale("log")
+  #plt.gca().set_yscale("log")
 
-plt.legend([r'$X\in$snarXiv',r'$X\in$arXiv'])
-plt.xlabel('PP$(X|$snarXiv$)/$PP$(X|$arXiv$)$')
-plt.ylabel('Number of abstracts')
+  plt.legend([r'$X\in$snarXiv',r'$X\in$arXiv'])
+  plt.xlabel('PP$(X|$snarXiv$)/$PP$(X|$arXiv$)$')
+  plt.ylabel('Number of abstracts')
 
-plt.axvline(eta_best, color='k', linestyle='dashed', linewidth=1)
-#plt.axvline(PP_eta_min, color='b', linestyle='dashed', linewidth=1)
-#_, max_ = plt.ylim()
-#plt.text(eta_min - 0.1*eta_min, max_ - max_/10, r'$\eta=$'+str(eta_min))
-#_, max_ = plt.ylim()
-#plt.text(eta_max + 0.1*eta_max, max_ - max_/10, r'$\eta=$'+str(eta_max))
-plt.savefig('../figures/BOW_histogram.png')
-plt.close()
+  plt.axvline(0.7, color='k', linestyle='dashed', linewidth=1)
+  #plt.axvline(PP_eta_min, color='b', linestyle='dashed', linewidth=1)
+  #_, max_ = plt.ylim()
+  #plt.text(eta_min - 0.1*eta_min, max_ - max_/10, r'$\eta=$'+str(eta_min))
+  _, max_ = plt.ylim()
+  #plt.text(0.75, max_ - max_/10, r'$\eta_{PP}=$'+str(0.7))
+  #plt.text(eta_max + 0.1*eta_max, max_ - max_/10, r'$\eta=$'+str(eta_max))
+  plt.savefig('../figures/BOW_histogram.png')
+  plt.close()

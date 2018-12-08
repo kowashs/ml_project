@@ -117,12 +117,11 @@ def classify(abstract, P_dict_2,dict_1, eta,gamma, vocab):
 # Choose how many abstracts to get (train+test)
 N_arxiv = 1000	    # must be <2000
 N_snarxiv = 1000
-# Choose where to start pulling papers in the arxiv search results
-arxiv_start = 600   # must be <30000-N_arxiv
+
 
 # Choose N-P parameters eta & gamma
 #eta_list = np.round(np.linspace(0.01,5,100),2)
-eta_list = [0.67]
+eta_list = [0.7]
 #eta = 0.5
 gamma = 0.5
 
@@ -218,7 +217,7 @@ eta_best = eta_list[i_best]
 
 
 # Make histogram of P(X|arx)/P(X|snarx) (X is an arxiv/snarxiv abstract)
-my_bins = np.logspace(-1,1, 30)
+my_bins = np.logspace(-1,1, 100)
 
 plt.figure()
 plt.hist(np.exp(log_ratio_arxiv_list),bins=my_bins,alpha=0.5)
@@ -230,10 +229,10 @@ plt.legend([r'$X\in$arXiv',r'$X\in$snarXiv'])
 plt.xlabel('PP$(X|$snarXiv$)/$PP$(X|$arXiv$)$')
 plt.ylabel('Number of abstracts')
 
-plt.axvline(0.67, color='k', linestyle='dashed', linewidth=1)
+plt.axvline(0.7, color='k', linestyle='dashed', linewidth=1)
 _, max_ = plt.ylim()
-plt.text(0.67 + 0.067,
-         max_ - max_/10,
-         r'$\eta=0.67$')
+# plt.text(0.77,
+#          max_ - max_/10,
+#          r'$\eta_{$PP$}=0.7$')
 plt.savefig('../figures/bigram_histogram.png')
 plt.close()
