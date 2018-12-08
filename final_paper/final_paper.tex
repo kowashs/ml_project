@@ -79,7 +79,7 @@
 \begin{abstract}
 We attempt to construct classifiers that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
 We study the bag-of-words and $n$-grams language models as well as several different classifiers: naive Bayes, likelihood-ratio, and tf-idf.
-We find the likelihood-ratio and tf-idf methods to perform extremely well, classifying abstracts correctly with nearly 100\% accuracy.
+We find the likelihood-ratio and tf-idf methods to perform extremely well, classifying abstracts correctly with nearly 100\% accuracy. All code available at \url{https://github.com/kowashs/ml_project}. 
 \end{abstract}
 
 
@@ -94,8 +94,9 @@ Simmons-Duffin created a browser game, ``arXiv vs. snarXiv,''\footnote{Now sadly
 After 750,000 guesses, the success rate was only 59\%; i.e., people mistakenly identified a randomly-generated snarXiv title/abstract as real 41\% of the time.
 This turns out to be a task that humans are remarkably (and amusingly) bad at, so we here investigate whether machines are any better.
 
-In the first part of this report, we discuss the principles of our text representation (\S\ref{sec:LMs}) and classification (\S\ref{sec:classifiers}) schemes.
-In the second, we present the results of parameter tuning and final classification accuracies. Details of implementation are collected in Appendix~\ref{app:details}.
+In \S\ref{sec:LMs} and \S\ref{sec:classifiers}, we discuss the principles of our text representation and classification schemes.
+\S\ref{sec:results} presents the results of parameter tuning and final classification accuracies.
+Details of implementation are collected in Appendix~\ref{app:details}.
 
 
 
@@ -107,40 +108,27 @@ In the second, we present the results of parameter tuning and final classificati
 
 
 
-
-\section{Theory}
-Each of the abstract classification algorithms we use consists of three main parts: a parser, a language model, and a classifier.
-Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Appendix~\ref{app:parsing}.
- 
-\subsection{Language models} \label{sec:LMs}
-\subsubsection{\texorpdfstring{$n$-grams}{n-grams}} \label{sec:n-grams}
+\section{Language models} \label{sec:LMs}
+\subsection{\texorpdfstring{$n$-grams}{n-grams}} \label{sec:n-grams}
 Assume that each abstract $X$ has a probability $\P(X|Y)$ of being from source $Y\in\{-1,1\}$, where $Y=1$ represents the label ``snarXiv'' and  $Y=-1$ represents the label ``arXiv.''
 Suppose $X=(w_1,w_2,\ldots,w_N)$ is an abstract containing $N$ words $\{w_i\}_{i=1}^N$, and let $w_i^{i+k}$ denote the word sequence $(w_i,w_{i+1},\ldots, w_{i+k})$.
 The $n$-grams language model approximates $\P(X|Y)$ as
 \begin{align}
   \P(X|Y) = \P(w_1^N|Y) &= \prod_{i=1}^N \P(w_i|w_1^{i-1},Y)
-  \\
-  &\approx \prod_{i=1}^N \P(w_i| w_{i-n+1}^{i-1},Y) \quad\; (n\text{-grams approx.})
+  \approx \prod_{i=1}^N \P(w_i| w_{i-n+1}^{i-1},Y) \quad\; (n\text{-grams approx.})
 \end{align}
 In other words, in the $n$-grams model we assume that the probability of a given word $w$ occurring in some abstract only depends on what the previous $n-1$ words in the abstract are, where $n$ is some (typically small) positive integer; the $n-1$ words on which $w$ depends are called the ``context'' of $w$.
-
 In the simplest case $n=1$, each word occurrence is assumed to be completely independent of any context, which is why the 1-gram language model is often referred to as the ``bag-of-words'' (BoW) model.
-Given some training set of abstracts from source $Y$, we define our BoW training estimate $\widehat\P(X|Y)_\text{BoW}$ as
-\begin{align}
-  \widehat\P(X|Y)_\text{BoW} &=  \widehat\P(w_1^N|Y)_\text{BoW} \equiv \prod_{i=1}^N \widehat\P(w_i|Y), \\
-  \text{where } \quad \widehat\P(w_i|Y) &\equiv \frac{C_Y(w_i)+1}{\sum_w [C_Y(w)+1]} = \frac{C_Y(w_i)+1}{\sum_{w\in\V} C_Y(w)+V},
-\end{align}
-$C_Y(w_i)$ is the number of times that $w_i$ appears, $\V$ is a vocabulary of size $V=|\V|$ containing all of the words that we wish to learn about, and $\sum_{w\in\V} C_Y(w)$ is the total number of words in the training set.
-The extra $+1$ on each word count $C_Y(w)$ comes from Laplace smoothing, which is a precautionary measure taken to prevent zero probabilities from occurring in cases where we need to classify an abstract that contains a word that did not appear in the training set.
-Other technical details regarding bag-of-words and $n$-grams implementation (including parsing) can be found in Appendix~\ref{app:details}. 
 
-The generalization to $n>1$ is straightforward: we define our estimate $\widehat\P(X|Y)_{n\text{-gram}}$ for a given training set from source $Y$ to be
+We define our $n$-grams estimate $\widehat\P(X|Y)_{n\text{-gram}}$ for a given training set from source $Y$ to be
 \begin{align}
   \widehat\P(X|Y)_{n\text{-gram}} = \widehat\P(w_1^N|Y)_{n\text{-gram}} &\equiv \prod_{i=1}^N \widehat\P(w_i| w_{i-n+1}^{i-1},Y),
   \\
   \text{where } \quad \widehat\P(w_i|w_{i-n+1}^{i-1},Y) &\equiv \frac{C_Y(w_{i-n+1}^i)+1}{C_Y(w_{i-n+1}^{i-1})+V},
 \end{align}
-$C_Y(w_{i-n+1}^i)$ is the number of times that the $n$-gram $w_{i-n+1}^i$ occurs, and $C_Y(w_{i-n+1}^{i-1})$ is the number of times that the $(n-1)$-gram $w_{i-n+1}^{i-1}$ appears.
+$C_Y(w_{i-n+1}^i)$ is the number of times that the $n$-gram $w_{i-n+1}^i$ occurs, $\V$ is a vocabulary of size $V=|\V|$ containing all of the words that we wish to learn about, and $\sum_{w\in\V} C_Y(w)$ is the total number of words in the training set, and $C_Y(w_{i-n+1}^{i-1})$ is the number of times that the $(n-1)$-gram $w_{i-n+1}^{i-1}$ appears.
+The extra $+1$ on each word count $C_Y(w)$ comes from Laplace smoothing, which is a precautionary measure taken to prevent zero probabilities from occurring in cases where we need to classify an abstract that contains a word that did not appear in the training set.
+Other technical details regarding our $n$-grams implementation (including parsing) can be found in Appendix~\ref{app:details}. 
 
 Note that since a typical arXiv/snarXiv abstract contains roughly 100 words, so the abstract probability $\P(X|Y)=\prod_{i=1}^N \P(w_i|w_1^{i-1},Y)$ is a product of $N\approx100$ different word probabilities, each of which is typically much less than one.
 As a result, the size of $\P(X|Y)$ is heavily dependent on the abstract length and is usually extremely small, causing our estimates to hit numerical underflow in some cases.
@@ -159,7 +147,7 @@ In practice, we use the logs of the classification conditions given below in Sec
 
 
 
-\subsubsection{tf--idf}
+\subsection{tf--idf}
 The family of $n$-gram models can be used to produce term probabilities for naive Bayes or likelihood-ratio testing, but they also induce perfectly good $\tfrac{V!}{(V-n)!}$-dimensional vector representations of documents, where each entry records the occurrence of a given $n$-gram in the document.
 These vectors are large, but fairly sparse, and make rudimentary features for regression or clustering algorithms. We enhance this model using the term-frequency--inverse-document-frequency (tf--idf) scheme as described in \citet[ch. 6]{jurafsky2014speech}.
 
@@ -190,7 +178,7 @@ where $C_{i,d}$ is the number of occurrences of $w_i$ in the document $d$, and
 %
 where $N$ is the number of documents in the training corpus, and $\mathrm{df}_i$ is the number of documents containing $w_i$.
 %
-\footnote{Our definition of $\mathrm{idf}_i$ varies from that given in the reference by smoothing terms which deal with the possibility of developing features from a corpus smaller than the one that produced the vocabulary and prevent infinite logs.}
+\footnote{Our definition of $\mathrm{idf}_i$ contains smoothing terms to avoid division by zero}
 
 The principle of tf--idf is to weight vector components according to their discriminating power: our representation should emphasize the most unique parts of documents.
 Accordingly, the inverse document frequency metric completely ignores a word that occurs in every document, but gives great weight to a word occurring only once in the corpus.
@@ -255,6 +243,7 @@ The relevant parameter in the LR-test is thus $\eta^{1/|X|}$. We would like our 
 
 
 \section{Results}
+\label{sec:results}
 We report results for three different algorithms: bag-of-words model with naive Bayes classifer (BoW-NB), bag-of-words model with likelihood-ratio test (BoW-LR), and bigrams=(2-grams) model with likelihood-ratio test (bi-LR).
 In each case, we trained on an equal number $N_\text{train}^Y=1000$ of arXiv and snarXiv abstracts, and we also tested on 1000 arXiv abstracts and 1000 snarXiv abstracts.
 %
@@ -296,7 +285,7 @@ The LR-classifier is clearly distinguishing between the two sets, giving a class
 \label{fig:histograms}
 \end{figure}
 
-Logistic regression trained on 2000 tf--idf document vectors and tested on 8000 yielded error rates ranging from 0.05\% to 0.375\% depending on the regularization parameter (lower $\lambda$ tended to produce lower error, even down to $\lambda \sim 10^{-8}$), and exhibited the same pattern as the Bayes and LR classifiers of 100\% accuracy at identifying snarXiv papers. The only errors at any regularization scale were misidentification of arXiv papers.
+Logistic regression trained on 2000 tf--idf document vectors and tested on 8000 vectors yielded error rates ranging from 0.05\% to 0.375\% depending on the regularization parameter (lower $\lambda$ tended to produce lower error, even down to $\lambda \sim 10^{-8}$), and exhibited the same pattern as the Bayes and LR classifiers of 100\% accuracy at identifying snarXiv papers. The only errors at any regularization scale were misidentification of arXiv papers.
 
 
 
