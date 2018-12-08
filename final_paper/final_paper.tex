@@ -313,7 +313,7 @@ We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{fig:
 \label{fig:histograms}
 \end{figure}
 
-
+Logistic regression trained on 2000 tf--idf document vectors and tested on 8000 yielded error rates ranging from 0.05\% to 0.375\% depending on the regularization parameter (lower $\lambda$ tended to produce lower error, even down to $\lambda \sim 10^{-8}$), and exhibited the same pattern as the Bayes and LR classifiers of 100\% accuracy at identifying snarXiv papers. The only errors at any regularization scale were misidentification of arXiv papers.
 
 
 
@@ -323,7 +323,7 @@ We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{fig:
 
 
 \section{Conclusion}
-We have demonstrated that the arXiv--snarXiv discrimination problem, while unusually difficult for humans, yields to even very simple analytical frameworks. 
+We have demonstrated that the arXiv--snarXiv discrimination problem, while unusually difficult for humans, yields to even very simple analytical frameworks. This is most likely due to the profound different statistical structures of the corpora illustrated in our histograms, which are not evident to human inspection (which focuses on attempting to parse or impart semantic structure) but stand out readily to probabilistic classification methods.
 
 
 
