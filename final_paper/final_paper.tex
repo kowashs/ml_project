@@ -5,7 +5,7 @@
 % before loading nips_2018
 
 % ready for submission
-\usepackage[final]{nips_2018}
+\usepackage{nips_2018}
 
 % to compile a preprint version, e.g., for submission to arXiv, add
 % add the [preprint] option:
@@ -77,9 +77,9 @@
 \maketitle
 
 \begin{abstract}
-  We give a brief update on our project to develop a classifier that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
-  Our progress consists of three major parts: obtaining large amounts of data in an efficient way, parsing the abstract text to prepare it for analysis, and implementing a simple classification algorithm -- a naive Bayes classifier using a bag-of-words model.
-  We chose this extremely simple classifier to serve as a proof of concept, though it already outperforms humans (successful classification rate is $\sim$85\% vs. 57\% for humans).
+We attempt to construct classifiers that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
+We study the bag-of-words and $n$-grams language models as well as several different classifiers: naive Bayes, likelihood-ratio, and tf-idf.
+We find the likelihood-ratio and tf-idf methods to perform extremely well, classifying abstracts correctly with nearly 100\% accuracy.
 \end{abstract}
 
 
@@ -161,10 +161,11 @@ In practice, we use the logs of the classification conditions given below in Sec
 
 \subsubsection{tf--idf}
 The family of $n$-gram models can be used to produce term probabilities for naive Bayes or likelihood-ratio testing, but they also induce perfectly good $\tfrac{V!}{(V-n)!}$-dimensional vector representations of documents, where each entry records the occurrence of a given $n$-gram in the document.
-These vectors are large, but fairly sparse, and make rudimentary features for regression or clustering algorithms.
+These vectors are large, but fairly sparse, and make rudimentary features for regression or clustering algorithms. We enhance this model using the term-frequency--inverse-document-frequency (tf--idf) scheme as described in \citet[ch. 6]{jurafsky2014speech}.
 
-However, the \emph{semantic} model implied by raw count vectors is extremely crude. For example, ubiquitous words like ``the'', ``and'', and ``of'' are assigned great weight, and pull most document vectors in a handful of directions, distorting the representation space in a way that can make clusters harder to separate.
-This motivates a weighting scheme that recognizes words more unique to particular documents or classes; in particular, we developed feature vectors using the term-frequency--inverse-document-frequency (tf--idf) scheme as described in \citet[ch. 6]{jurafsky2014speech}.
+
+% However, the \emph{semantic} model implied by raw count vectors is extremely crude. For example, ubiquitous words like ``the'', ``and'', and ``of'' are assigned great weight, and pull most document vectors in a handful of directions, distorting the representation space in a way that can make clusters harder to separate.
+% This motivates a weighting scheme that recognizes words more unique to particular documents or classes; in particular, we developed feature vectors using the term-frequency--inverse-document-frequency (tf--idf) scheme as described in \citet[ch. 6]{jurafsky2014speech}.
 
 Each entry $d_i$ in a document vector $d$ corresponds to a term $w_i$ in the vocabulary and receives a weight
 %
@@ -283,7 +284,8 @@ For BoW-NB, we found the classification accuracy to be 77\%, with the only miscl
 This is somewhat expected for a classifier which does nothing to constrain the false-positive rate.
 
 For BoW-LR and bi-LR, we tuned the LR-hyperparameter $\eta_\text{PP}$ through cross-validation to maximize the classification accuracy on abstracts from both arXiv and snarXiv.
-We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{fig:histograms} shows histograms of our estimates for $\frac{\text{PP}(X|\text{snarXiv})}{\text{PP}(X|\text{arXiv})}$ 
+We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{fig:histograms} shows histograms of our estimates for $\frac{\text{PP}(X|\text{snarXiv})}{\text{PP}(X|\text{arXiv})}$ for both the arXiv and snarXiv test corpora.
+The LR-classifier is clearly distinguishing between the two sets, giving a classification accuracy of 100\%.
 
 
 
