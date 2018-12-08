@@ -13,7 +13,7 @@ def train(arxiv_abstracts, snarxiv_abstracts, vocab):
 
   #P_arxiv = N_arxiv/(N_arxiv+N_snarxiv)  # not needed for Neyman-Pearson
 
-  # Store word info in dictionary (not ideal, but should work)
+  # Store word info in dictionary
   # Structure: dict['hello'] = [#('hello' in arxiv), #('hello' in snarxiv)]
   dict = {}
 
@@ -63,7 +63,7 @@ def classify(abstract,P_dict,N_arxiv_words,N_snarxiv_words, eta,gamma, vocab):
   log_arx2snarx_ratio = log_arx2snarx_ratio/len(abstract) # log(perplexities ratio)
 
 
-  log_eta = np.log(eta)
+  log_eta = np.log(eta) #/len(abstract)
   if log_arx2snarx_ratio > log_eta:
     return 'arxiv', log_arx2snarx_ratio
   elif log_arx2snarx_ratio < log_eta:
@@ -78,15 +78,20 @@ def classify(abstract,P_dict,N_arxiv_words,N_snarxiv_words, eta,gamma, vocab):
 ###############################################################################
 # Apply to test data
 ###############################################################################
-# Choose how many abstracts to get (train+test)
-N_arxiv = 1000	    # must be <2000
-N_snarxiv = 1000
+# Choose how many abstracts to get
+N_arxiv_train = 100
+N_snarxiv_train = 100
+
+N_arxiv_test = 500
+N_snarxiv_test = 500
+
+N_arxiv = N_arxiv_train + N_arxiv_test
+N_snarxiv = N_snarxiv_train + N_snarxiv_test
 
 
 # Choose LR parameters eta & gamma
-#eta_list = np.round(np.linspace(0.01,5,100),2)
-eta_list = [0.67]
-#eta = 0.5
+#eta_list = np.round(10**np.arange(-0.5,0.5,0.1),2)
+eta_list = [0.7]
 gamma = 0.5
 
 # Generate new snarxiv abstracts
@@ -97,8 +102,8 @@ arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
 print(f"Loaded {N_arxiv} arXiv abstracts")
 
 # Split abstracts into train and test sets
-N_arxiv_train = int(round(0.1*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
-N_snarxiv_train = int(round(0.1*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
+#N_arxiv_train = 1000 #int(round(0.5*N_arxiv))
+#N_snarxiv_train = 1000 #int(round(0.5*N_snarxiv))
 
 arxiv_train = arxiv_abstracts[:N_arxiv_train]
 arxiv_test = arxiv_abstracts[N_arxiv_train:]
@@ -115,32 +120,39 @@ P_dict, N_a, N_s = train(arxiv_train, snarxiv_train, vocab)
 
 
 # Apply to test data
-TPR_list = []
-FDR_list = []
+TPR_list = []; FDR_list = []; i_perfect = []; eta_perfect = []
 for i in range(len(eta_list)):
   eta = eta_list[i]
   # Attempt to classify test abstracts & compute classification error
   arxiv_wins=0; arxiv_losses=0
-  log_ratio_arxiv_list = []
+  log_ratio_arxiv_list = []; abstract_len_list=[]
   for abstract in arxiv_test:
     label, log_arx2snarx = classify(abstract, P_dict,N_a,N_s, eta,gamma, vocab)
     log_ratio_arxiv_list.append(log_arx2snarx)
+    abstract_len_list.append(len(abstract))
     if label == 'arxiv':
       arxiv_wins+=1
     else:
       arxiv_losses+=1
   arxiv_accuracy = arxiv_wins/(arxiv_wins+arxiv_losses)
+  PP_eta_max = np.exp(min(log_ratio_arxiv_list))
+  eta_max = np.exp(min(np.array(log_ratio_arxiv_list)*np.array(abstract_len_list))) # should be eta_max
+  print(np.mean(abstract_len_list))
 
   snarxiv_wins=0; snarxiv_losses=0
-  log_ratio_snarxiv_list = []
+  log_ratio_snarxiv_list = []; abstract_len_list=[]
   for abstract in snarxiv_test:
     label, log_arx2snarx = classify(abstract, P_dict,N_a,N_s, eta,gamma, vocab)
     log_ratio_snarxiv_list.append(log_arx2snarx)
+    abstract_len_list.append(len(abstract))
     if label == 'snarxiv':
       snarxiv_wins+=1
     else:
       snarxiv_losses+=1
   snarxiv_accuracy = snarxiv_wins/(snarxiv_wins+snarxiv_losses)
+  PP_eta_min = np.exp(max(log_ratio_snarxiv_list))
+  eta_min = np.exp(max(np.array(log_ratio_snarxiv_list)*np.array(abstract_len_list))) # should be eta_min
+  print(np.mean(abstract_len_list))
 
   # Call snarxiv positive, arxiv negative (think spam flag)
   TPR_list.append(snarxiv_accuracy)
@@ -152,6 +164,9 @@ for i in range(len(eta_list)):
   wins = arxiv_wins+snarxiv_wins
   losses = arxiv_losses+snarxiv_losses
   accuracy = wins/(wins+losses)   # E_test = losses/(wins+losses)
+  if losses==0:
+    eta_perfect.append(eta)
+    i_perfect.append(i)
 
   print('eta:',eta)
   print('arXiv accuracy: %.3f (%i wins, %i losses)' %(arxiv_accuracy,arxiv_wins,arxiv_losses))
@@ -160,42 +175,59 @@ for i in range(len(eta_list)):
   print(TPR_list[-1],FDR_list[-1])
   print()
 
-
 i_best = np.argmax(np.array(TPR_list)-np.array(FDR_list))
 eta_best = eta_list[i_best]
 
-# Make TPR vs. FDR plot
+# # Make TPR vs. FDR plot
 # plt.figure()
-# #plt.plot(FDR_list,TPR_list,'b.')
-# plt.plot(FDR_list[:i_best],TPR_list[:i_best],'b.')
-# plt.plot(FDR_list[i_best],TPR_list[i_best],'rx')
-# plt.plot(FDR_list[i_best+1:],TPR_list[i_best+1:],'g.')
+# if len(eta_perfect)==0:
+#   i_best = np.argmax(np.array(TPR_list)-np.array(FDR_list))
+#   eta_best = eta_list[i_best]
+#
+#   plt.plot(FDR_list[:i_best],TPR_list[:i_best],'b.')
+#   plt.plot(FDR_list[i_best],TPR_list[i_best],'rx')
+#   plt.plot(FDR_list[i_best+1:],TPR_list[i_best+1:],'g.')
+#   plt.legend(['$\eta>$'+str(eta_best), '$\eta=$'+str(eta_best),
+#    '$\eta<$'+str(eta_best)],loc='lower right')
+# else:
+#   i_low = i_perfect[0]; i_high = i_perfect[-1]
+#   eta_low = eta_perfect[0]; eta_high = eta_perfect[-1]
+#   plt.plot(FDR_list[:i_low],TPR_list[:i_low],'b.')
+#   plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx')
+#   plt.plot(FDR_list[i_high+1:],TPR_list[i_high+1:],'g.')
+#   plt.legend(['$\eta>$'+str(eta_high), str(eta_low)+'$\leq\eta\leq$'+str(eta_high),
+#    '$\eta<$'+str(eta_low)],loc='lower right')
+#
 # plt.xlim((-.05,1.05)); plt.ylim((-.05,1.05))
-# plt.legend(['$\eta>$'+str(eta_best), '$\eta=$'+str(eta_best),
-#  '$\eta<$'+str(eta_best)],loc='lower right')
 # plt.xlabel('False Discovery Rate (FDR)')
 # plt.ylabel('True Positive Rate (TPR)')
-# plt.savefig('../figures/FDR_TPR_plot.png')
+# plt.savefig('../figures/FDR_TPR_plot_BoW.png')
 # plt.close()
 
 
+print(eta_min, eta_max)
+print(round(PP_eta_min,2),round(PP_eta_max,2))
+
 # Make histogram of P(X|arx)/P(X|snarx) (X is an arxiv/snarxiv abstract)
-my_bins = np.logspace(-1,1, 30)
+my_bins = np.logspace(-1,1, 100)
 
 plt.figure()
-plt.hist(np.exp(log_ratio_arxiv_list),bins=my_bins,alpha=0.5)
-plt.hist(np.exp(log_ratio_snarxiv_list),bins=my_bins,alpha=0.5)
+plt.hist(np.exp(log_ratio_snarxiv_list),alpha=0.5)
+plt.hist(np.exp(log_ratio_arxiv_list),alpha=0.5)
+# plt.hist(np.exp(log_ratio_snarxiv_list),bins=my_bins,alpha=0.5)
+# plt.hist(np.exp(log_ratio_arxiv_list),bins=my_bins,alpha=0.5)
 plt.gca().set_xscale("log")
 #plt.gca().set_yscale("log")
 
-plt.legend([r'$X\in$arXiv',r'$X\in$snarXiv'])
+plt.legend([r'$X\in$snarXiv',r'$X\in$arXiv'])
 plt.xlabel('PP$(X|$snarXiv$)/$PP$(X|$arXiv$)$')
 plt.ylabel('Number of abstracts')
 
-plt.axvline(0.67, color='k', linestyle='dashed', linewidth=1)
-_, max_ = plt.ylim()
-plt.text(0.67 + 0.067,
-         max_ - max_/10,
-         r'$\eta=0.67$')
+plt.axvline(eta_best, color='k', linestyle='dashed', linewidth=1)
+#plt.axvline(PP_eta_min, color='b', linestyle='dashed', linewidth=1)
+#_, max_ = plt.ylim()
+#plt.text(eta_min - 0.1*eta_min, max_ - max_/10, r'$\eta=$'+str(eta_min))
+#_, max_ = plt.ylim()
+#plt.text(eta_max + 0.1*eta_max, max_ - max_/10, r'$\eta=$'+str(eta_max))
 plt.savefig('../figures/BOW_histogram.png')
 plt.close()

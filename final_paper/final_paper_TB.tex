@@ -29,7 +29,7 @@
 \usepackage{graphicx}
 
 
-\title{Project Milestone: arXiv vs. snarXiv}
+\title{arXiv vs. snarXiv}
 
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\V}{\mathcal{V}}
@@ -74,43 +74,32 @@
 \maketitle
 
 \begin{abstract}
-  We give a brief update on our project to develop a classifier that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
-  Our progress consists of three major parts: obtaining large amounts of data in an efficient way, parsing the abstract text to prepare it for analysis, and implementing a simple classification algorithm -- a naive Bayes classifier using a bag-of-words model.
-  We chose this extremely simple classifier to serve as a proof of concept, though it already outperforms humans (successful classification rate is $\sim$85\% vs. 57\% for humans).
+%  We give a brief update on our project to develop a classifier that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
+%  Our progress consists of three major parts: obtaining large amounts of data in an efficient way, parsing the abstract text to prepare it for analysis, and implementing a simple classification algorithm -- a naive Bayes classifier using a bag-of-words model.
+%  We chose this extremely simple classifier to serve as a proof of concept, though it already outperforms humans (successful classification rate is $\sim$85\% vs. 57\% for humans).
 \end{abstract}
 
 
 
 
 \section{Introduction} \label{sec:intro}
-The arXiv exposes its search API through a well-documented HTTP interface, but this has limitations in the context of our project as it is configured to find no more than 30000 results, and return no more than 2000 of them at a time.
-We estimate that \texttt{hep-th} has $\sim$85000 articles, and we'd ideally use all of them, so we need a more robust data acquisition tool.
-Fortunately, arXiv also furnishes an Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) interface, which is better-suited to full-repository harvesting. We use the \texttt{pyoai} module\footnote{\url{https://github.com/infrae/pyoai}} to retrieve the full metadata set from \texttt{hep-th}, extract the abstract text from the returned XML structure, and feed it to the parser, which normalizes it for analysis.
+%The arXiv exposes its search API through a well-documented HTTP interface, but this has limitations in the context of our project as it is configured to find no more than 30000 results, and return no more than 2000 of them at a time.
+%We estimate that \texttt{hep-th} has $\sim$85000 articles, and we'd ideally use all of them, so we need a more robust data acquisition tool.
+%Fortunately, arXiv also furnishes an Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) interface, which is better-suited to full-repository harvesting. We use the \texttt{pyoai} module\footnote{\url{https://github.com/infrae/pyoai}} to retrieve the full metadata set from \texttt{hep-th}, extract the abstract text from the returned XML structure, and feed it to the parser, which normalizes it for analysis.
+%
+%The snarXiv abstracts are even easier to obtain, since we can generate them at will.
+%We use a modified grammar file to produce only abstracts rather than titles and authors, then call the compiled snarXiv generator repeatedly to produce a corpus, which can be fed to the parser.
+%(The snarXiv generator could of course be modified to produce the desired format in the first place, but we prefer to use as much of the original tool as possible.)
 
-The snarXiv abstracts are even easier to obtain, since we can generate them at will.
-We use a modified grammar file to produce only abstracts rather than titles and authors, then call the compiled snarXiv generator repeatedly to produce a corpus, which can be fed to the parser.
-(The snarXiv generator could of course be modified to produce the desired format in the first place, but we prefer to use as much of the original tool as possible.)
 
-
-\section{Implementation} \label{sec:implementation} % maybe should be in appendix
-\subsection{Parsing abstract text}
-The raw response from an arXiv API call is a bunch of text consisting of full \texttt{hep-th} papers (which often contain TeX symbols like \$ and  \textbackslash) along with several tags specifying sections as title, author, abstract, etc.
-For simplicity, we are currently only focusing on the abstracts, which we pull out and organize into a list using Python's \texttt{feedparser} package.
-We also store snarXiv abstracts in this form, so the rest of the parsing process is the same for the arXiv and snarXiv data.
-
-The next step is to split the abstract text into regular words that are easily identifiable between different abstracts.
-We split on all spaces and newlines, and for uniformity we make all words lowercase and strip out all punctuation.
-This method works for the most part, but it leaves traces of some TeX commands; for example, it sends \texttt{\textbackslash mathbb\{Z\} $\to$ mathbbz}.
-In the future we may try a more sophisticated approach where we deal with TeX commands at the beginning before stripping all punctuation, but for now this issue is only a minor nuisance.
-In any case, the output of our parsing procedure is two lists of lists (one arXiv, one snarXiv), where each inner list is comprised of formatted words from a single abstract.
 
 
 \section{Theory}
 Each of the abstract classification algorithms we use consists of three main parts: a parser, a language model, and a classifier.
-Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Section~\ref{sec:implementation}.
+Here we discuss the theory behind our language models and classifiers; details about our parsing choices can be found in Appendix~\ref{app:parsing}.
  
 \subsection{Language models} \label{sec:LMs}
-\subsubsection{$n$-grams}
+\subsubsection{$n$-grams} \label{sec:n-grams}
 Assume that each abstract $X$ has a probability $\P(X|Y)$ of being from source $Y\in\{-1,1\}$, where $Y=1$ represents the label ``snarXiv'' and  $Y=-1$ represents the label ``arXiv.''
 Suppose $X=(w_1,w_2,\ldots,w_N)$ is an abstract containing $N$ words $\{w_i\}_{i=1}^N$, and let $w_i^{i+k}$ denote the word sequence $(w_i,w_{i+1},\ldots, w_{i+k})$.
 The $n$-grams language model approximates $\P(X|Y)$ as
@@ -139,7 +128,19 @@ The generalization to $n>1$ is straightforward: we define our estimate $\widehat
 \end{align}
 $C_Y(w_{i-n+1}^i)$ is the number of times that the $n$-gram $w_{i-n+1}^i$ occurs, and $C_Y(w_{i-n+1}^{i-1})$ is the number of times that the $(n-1)$-gram $w_{i-n+1}^{i-1}$ appears.
 
-
+Note that since a typical arXiv/snarXiv abstract contains roughly 100 words, so the abstract probability $\P(X|Y)=\prod_{i=1}^N \P(w_i|w_1^{i-1},Y)$ is a product of $N\approx100$ different word probabilities, each of which is typically much less than one.
+As a result, the size of $\P(X|Y)$ is heavily dependent on the abstract length and is usually extremely small, causing our estimates to hit numerical underflow in some cases.
+To combat the issue of length dependence, we prefer to work with the perplexity
+\begin{align}
+	\text{PP}(X|Y) \equiv \sqrt[N]{\frac{1}{\P(X|Y)}} = \left[ \prod_{i=1}^N \P(w_i|w_1^{i-1},Y) \right]^{-1/N},
+\end{align}
+which normalizes the abstract probability by taking the geometric mean of the individual word probabilities (and inverting).
+To prevent numerical underflow from rendering our algorithms useless, we always work with logs of probabilities in our code, which turns products into sums and keeps the numbers reasonable.
+Note that the log of the perplexity is a simple arithmetic mean:
+\begin{align}
+	\log\text{PP}(X|Y) = -\frac{1}{N}\log\P(X|Y) = -\frac{1}{N} \sum_{i=1}^N \log\P(w_i|w_1^{i-1},Y).
+\end{align}
+In practice, we use the logs of the classification conditions given below in Section~\ref{sec:classifiers} to classify our test abstracts as arXiv or snarXiv; we only exponentiate back to perplexities for the purposes of figures.
 
 
 \subsubsection{tf--idf}
@@ -150,7 +151,7 @@ $C_Y(w_{i-n+1}^i)$ is the number of times that the $n$-gram $w_{i-n+1}^i$ occurs
 
 
 
-\subsection{Classifiers}
+\subsection{Classifiers} \label{sec:classifiers}
 \subsubsection{Naive Bayes classifier}
 Our first attempt at creating a program that distinguishes between arXiv and snarXiv abstracts utilized a naive Bayes (NB) classifier.
 The theory behind this classifier is simple: if $\P(Y=1|X) > \P(Y=-1|X)$, then we classify $X$ as snarXiv; otherwise, we classify it as arXiv.
@@ -189,26 +190,35 @@ In practice, $\gamma$ is almost completely irrelevant since for any $\eta$, the 
 \footnote{The borderline case of the naive Bayes classifier where $\P(Y=\pm1|X)=\frac{1}{2}$ is irrelevant for the same reason.}
 %
 We arbitrarily use $\gamma=0.5$, meaning the only hyperparameter we tune is $\eta$.
-
-
-
-
-
-
-
-
+Because of the issues of small $\P(X|Y)$ probabilities discussed in Section~\ref{sec:n-grams}, it is more practical to instead compare the perplexities $\text{PP}(X|Y)=\P(X|Y)^{-1/|X|}$.
+The relevant parameter in the LR-test is thus $\eta^{1/|X|}$. We would like our hyperparameter to not depend on the specifics of the input though, so we note that the average abstract length is about 120 words and define $\eta_\text{PP}\equiv \eta^{1/120}$ to be our new LR-hyperparameter.
 
 
 
 \section{Results}
+We report results for three different algorithms: bag-of-words model with naive Bayes classifer (BoW-NB), bag-of-words model with likelihood-ratio test (BoW-LR), and bigrams=(2-grams) model with likelihood-ratio test (bi-LR).
+In each case, we trained on an equal number $N_\text{train}^Y$ of arXiv and snarXiv abstracts, and we tested on 5000 arXiv abstracts and 5000 snarXiv abstracts.
+%
+% Add tf-idf stuff?
+%
 
-Testing the method on new abstracts after training on 800 arXiv and 800 snarXiv abstracts, we find that the algorithm correctly classifies an abstract as arXiv or snarXiv roughly 85\% of the time.
-This accuracy is not fantastic (which is to be expected given the simplicity of the model), but it is higher than we expected, and is already well higher than the average human classification accuracy of 57\%.%
-\footnote{According to \url{http://snarxiv.org/vs-arxiv/highscores/}}
-Looking a little more closely at the results, we find that the only misclassifications made are arXiv abstracts that the classifier mistakes as snarXiv -- when a snarXiv abstract is tested, it is correctly identified as snarXiv 100\% of the time.
-The explanation for this finding is relatively simple: snarXiv only has about 1000 unique words that it pulls from when generating fake abstracts, so each of these words occurs with a significant probability.
-Any reasonably large training set exposes this, and thus the classifier has no problem identifying snarXiv abstracts correctly.
-On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making for lower individual word probabilities), and thus the classifier can struggle when an arXiv abstract contains several snarXiv words.
+For BoW-NB, we varied $N_\text{train}^Y$ and examined how the classification error changed...
+
+For BoW-LR and bi-LR, we tuned the LR-hyperparameter $\eta_\text{PP}$ through cross-validation to maximize the classification accuracy on abstracts from both arXiv and snarXiv.
+We found $\eta_{\text{PP}}=0.7$ to perform best in both models; the true positive rate (TPR) vs. false discovery rate (FDR) is plotted in Figure~\ref{BoW_TPR_FDR}.
+We also made histograms of $\frac{\text{PP}(X|snarXiv)}{\text{PP}(X|arXiv)}$, which shows exactly how the ...
+
+
+
+
+
+%Testing the method on new abstracts after training on 800 arXiv and 800 snarXiv abstracts, we find that the algorithm correctly classifies an abstract as arXiv or snarXiv roughly 85\% of the time.
+%This accuracy is not fantastic (which is to be expected given the simplicity of the model), but it is higher than we expected, and is already well higher than the average human classification accuracy of 57\%.%
+%\footnote{According to \url{http://snarxiv.org/vs-arxiv/highscores/}}
+%Looking a little more closely at the results, we find that the only misclassifications made are arXiv abstracts that the classifier mistakes as snarXiv -- when a snarXiv abstract is tested, it is correctly identified as snarXiv 100\% of the time.
+%The explanation for this finding is relatively simple: snarXiv only has about 1000 unique words that it pulls from when generating fake abstracts, so each of these words occurs with a significant probability.
+%Any reasonably large training set exposes this, and thus the classifier has no problem identifying snarXiv abstracts correctly.
+%On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making for lower individual word probabilities), and thus the classifier can struggle when an arXiv abstract contains several snarXiv words.
 
 
 
@@ -235,32 +245,17 @@ On the other hand, 800 arXiv abstracts contain roughly 6000 unique words (making
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 \section{Conclusions}
-\subsection{Feature development}
-Currently, our feature model represents a given abstract as a dictionary of occurrence counts for each word in the abstract and each word known from the training corpus.
-This is called a bag-of-words model and is completely insensitive to word order, meaning that it is impossible for a classifier to take into account word co-occurrence rates or sentence position, which obviously contain most of the information in natural language.
-(That our simple classification scheme achieves such reasonable performance given an extremely reductive model is surprising, and might suggest that the problem as posed is too easy; more thoughts on that below.)
-
-The next step from a context-insensitive model is, obviously, the incorporation of context: instead of looking at how many times a given word appears in an abstract, we can look at the number of times it appears adjacent to each other word, or the number of times it appears in a triad with each pair of other words. This leads generically to the class of $n$-gram models, which incorporate length-$n$ sequences of words as elementary objects of analysis.
-
-Concretely, the Brown model is a common framework in which language production is treated as a Markov process with hidden states and transition probabilities, and frames the learning task as estimating these properties from $n$-gram occurrence data in the corpus.
-This task is complicated, however, by the rapidly ballooning amount of data that is produced if we must account for the occurrence of \emph{every} possible $n$-gram, even considering relatively small maximum correlation lengths.
-This leads naturally to the field of word embeddings, which aim to map this painfully high-dimensional space into a lower-dimensional feature space in a way that preserves useful information about relationships between words from the $n$-gram structure.
-\citet{stratos2015model} and \citet{stratos2014spectral} discuss efficient methods for generating embeddings from corpora, which will be our next implementation step in feature design.
+%Currently, our feature model represents a given abstract as a dictionary of occurrence counts for each word in the abstract and each word known from the training corpus.
+%This is called a bag-of-words model and is completely insensitive to word order, meaning that it is impossible for a classifier to take into account word co-occurrence rates or sentence position, which obviously contain most of the information in natural language.
+%(That our simple classification scheme achieves such reasonable performance given an extremely reductive model is surprising, and might suggest that the problem as posed is too easy; more thoughts on that below.)
+%
+%The next step from a context-insensitive model is, obviously, the incorporation of context: instead of looking at how many times a given word appears in an abstract, we can look at the number of times it appears adjacent to each other word, or the number of times it appears in a triad with each pair of other words. This leads generically to the class of $n$-gram models, which incorporate length-$n$ sequences of words as elementary objects of analysis.
+%
+%Concretely, the Brown model is a common framework in which language production is treated as a Markov process with hidden states and transition probabilities, and frames the learning task as estimating these properties from $n$-gram occurrence data in the corpus.
+%This task is complicated, however, by the rapidly ballooning amount of data that is produced if we must account for the occurrence of \emph{every} possible $n$-gram, even considering relatively small maximum correlation lengths.
+%This leads naturally to the field of word embeddings, which aim to map this painfully high-dimensional space into a lower-dimensional feature space in a way that preserves useful information about relationships between words from the $n$-gram structure.
+%\citet{stratos2015model} and \citet{stratos2014spectral} discuss efficient methods for generating embeddings from corpora, which will be our next implementation step in feature design.
 
 
 
@@ -291,7 +286,7 @@ Several sources note that GANs are not naturally suited to contexts with discret
 
 \appendix
 \section{Technical details} \label{app:details}
-\subsection{Parsing abstract text}
+\subsection{Parsing abstract text} \label{app:parsing}
 Our parser attempts to translate the raw abstract text (a string) to a list of formatted words that are easily identifiable between different abstracts.
 We first split the text on all spaces, newlines, and hyphens, and for uniformity we make all words lowercase.
 Next, we look for words that end in a period or question mark and insert the special word tokens \texttt{<e>} and \texttt{<s>} afterwards to mark the end of one sentence and the start of another.
@@ -323,21 +318,7 @@ We then treat \texttt{<UNK>} as we would any other word when counting $n$-gram o
 We prepend copies of the start sentence token \texttt{<s>} to each parsed abstract to ensure that the first $n$-gram consists of $n-1$ copies of \texttt{<s>} and one ``real'' word.
 Similarly, we append copies of \texttt{<e>} to the end of each parsed abstract.
 
-\subsection{Managing probabilities numerically}
-Consider an abstract $X$ from source $Y$.
-A typical arXiv/snarXiv abstract contains roughly 100 words, so the abstract probability $\P(X|Y)=\prod_{i=1}^N \P(w_i|w_1^{i-1},Y)$ is a product of $N\approx100$ different word probabilities, each of which is typically much less than one.
-As a result, the size of $\P(X|Y)$ is heavily dependent on the abstract length and is usually extremely small, easily hitting numerical underflow in some cases.
-To combat the issue of length dependence, we prefer to work with the perplexity
-\begin{align}
-	\text{PP}(X|Y) \equiv \sqrt[N]{\frac{1}{\P(X|Y)}} = \left[ \prod_{i=1}^N \P(w_i|w_1^{i-1},Y) \right]^{-1/N},
-\end{align}
-which normalizes the abstract probability by taking the geometric mean of the individual word probabilities (and inverting).
-To prevent numerical underflow from rendering our algorithms useless, we always work with logs of probabilities in our code, which turns products into sums and keeps the numbers reasonable.
-Note that the log of the perplexity is a simple arithmetic mean:
-\begin{align}
-	\log\text{PP}(X|Y) = -\frac{1}{N}\log\P(X|Y) = -\frac{1}{N} \sum_{i=1}^N \log\P(w_i|w_1^{i-1},Y).
-\end{align}
-In practice, we use the logs of the classification conditions in Section~\ref{sec:classifiers} to classify our test abstracts as arXiv or snarXiv; we only exponentiate back to perplexities for the purposes of figures.
+
 
 
 
