@@ -196,7 +196,7 @@ The principle of tf--idf is to weight vector components according to their discr
 Accordingly, the inverse document frequency metric completely ignores a word that occurs in every document, but gives great weight to a word occurring only once in the corpus.
 Further, our term-frequency metric grows sublinearly, since a word occurring ten times is not necessarily ten times as important as one occurring singly.
 
-
+We use tf--idf vectors as features in an $L^2$-regularized logistic regression scheme, where the target space is $\{-1,1\}$, with negative corresponding to arXiv and positive to snarXiv. We train the weights and offset using CVXPY, as the optimal estimator has no closed form.
 
 
 
@@ -247,25 +247,6 @@ In practice, $\gamma$ is almost completely irrelevant since for any $\eta$, the 
 We arbitrarily use $\gamma=0.5$, meaning the only hyperparameter we tune is $\eta$.
 Because of the issues of small $\P(X|Y)$ probabilities discussed in Section~\ref{sec:n-grams}, it is more practical to instead compare the perplexities $\text{PP}(X|Y)=\P(X|Y)^{-1/|X|}$.
 The relevant parameter in the LR-test is thus $\eta^{1/|X|}$. We would like our hyperparameter to not depend on the specifics of the input though, so we note that the average abstract length is about 120 words and define $\eta_\text{PP}\equiv \eta^{1/120}$ to be our new LR-hyperparameter.
-
-
-
-
-
-\subsubsection{Logistic regression}
-For weighted vector representations as produced by the tf--idf scheme, it is not obvious how to produce term or document likelihoods for use in a Bayes or LR classifier, so we must turn to other classification methods. Fortunately, there are a host of methods for binary classification of vector data, and it is convenient and familiar to choose regularized logistic regression. We adopt a model
-%
-\begin{align}
-  \P(Y=y \mid x) &= \frac{1}{1 + e^{-y w^T x}}
-\end{align}
-%
-where $y \in \{-1, 1\}$ represents the class of a document (negative for arXiv, positive for snarXiv), $x$ is a tf--idf document vector, and $w$ and $b$ are parameters to be learned. We accomplish this by minimizing the convex regularized objective
-%
-\begin{align}
-  J(w) &= \sum_{i=1}^N \log\left[1+ \exp\left(-y_i(x_i^T w + b)\right)\right] + \lambda \|w\|_2^2,
-\end{align}
-%
-where $\lambda$ is a hyperparameter. The optimum lacks a closed form, but it can be found easily in CVXPY even for the $V \sim 15000$-dimensional space created by our vocabulary. After training $w$ and $b$, we classify a document according to the sign of the exponent $(x_i^T w + b)$, since it can be related to the log-ratio of probabilities to be in each class.
 
 
 
