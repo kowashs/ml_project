@@ -2,16 +2,16 @@
 import numpy as np
 import api_get_abstracts as getter
 
-arxiv_tot = getter.get_stored_arxiv(1000)
-snarxiv_tot = getter.get_snarxiv(1000)
-
-arxiv_train = arxiv_tot[:500]
-snarxiv_train = snarxiv_tot[:500]
-
-arxiv_test = arxiv_tot[500:]
-snarxiv_test = snarxiv_tot[500:]
-
-vocab = np.load('big_vocab.npz')['vocab']
+# arxiv_tot = getter.get_stored_arxiv(1000)
+# snarxiv_tot = getter.get_snarxiv(1000)
+# 
+# arxiv_train = arxiv_tot[:500]
+# snarxiv_train = snarxiv_tot[:500]
+# 
+# arxiv_test = arxiv_tot[500:]
+# snarxiv_test = snarxiv_tot[500:]
+# 
+# vocab = np.load('big_vocab.npz')['vocab']
 
 def idf(vocab,arxiv,snarxiv): #assumes abstracts pre-parsed, but in (N,1) array
     N_arxiv = len(arxiv)
@@ -67,12 +67,12 @@ def tf_idf(docs, vocab, idfs): #submit list/array of docs always
 
 
 
-idfs = idf(vocab,arxiv_train,snarxiv_train)
-
-tf_idfs = tf_idf(arxiv_test, vocab, idfs)
-
-print(vocab[:50])
-print(tf_idfs[0,:50])
+# idfs,_,_ = idf(vocab,arxiv_train,snarxiv_train)
+# 
+# tf_idfs = tf_idf(arxiv_test, vocab, idfs)
+# 
+# print(vocab[:50])
+# print(tf_idfs[0,:50])
 
 
 
