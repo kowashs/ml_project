@@ -76,9 +76,9 @@
 \maketitle
 
 \begin{abstract}
-%  We give a brief update on our project to develop a classifier that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
-%  Our progress consists of three major parts: obtaining large amounts of data in an efficient way, parsing the abstract text to prepare it for analysis, and implementing a simple classification algorithm -- a naive Bayes classifier using a bag-of-words model.
-%  We chose this extremely simple classifier to serve as a proof of concept, though it already outperforms humans (successful classification rate is $\sim$85\% vs. 57\% for humans).
+We attempt to construct classifiers that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
+We study the bag-of-words and $n$-grams language models as well as several different classifiers: naive Bayes, likelihood-ratio, and tf-idf.
+We find the likelihood-ratio and tf-idf methods to perform extremely well, classifying abstracts correctly with nearly 100\% accuracy.
 \end{abstract}
 
 
@@ -205,13 +205,8 @@ For BoW-NB, we found the classification accuracy to be 77\%, with the only miscl
 This is somewhat expected for a classifier which does nothing to constrain the false-positive rate.
 
 For BoW-LR and bi-LR, we tuned the LR-hyperparameter $\eta_\text{PP}$ through cross-validation to maximize the classification accuracy on abstracts from both arXiv and snarXiv.
-We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{histograms} shows histograms of our estimates for $\frac{\text{PP}(X|\text{snarXiv})}{\text{PP}(X|\text{arXiv})}$ 
-
-
-
-
-
-
+We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{histograms} shows histograms of our estimates for $\frac{\text{PP}(X|\text{snarXiv})}{\text{PP}(X|\text{arXiv})}$ for both the arXiv and snarXiv test corpora.
+The LR-classifier is clearly distinguishing between the two sets, giving a classification accuracy of 100\%.
 
 
 %\begin{figure}[!htbp]
@@ -220,7 +215,7 @@ We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{hist
 %%\caption{LR-classifier using bag-of-words model.}
 %\end{figure}
 
-\begin{figure}[!htbp] \label{histograms}
+\begin{figure}[!htbp]
 \centering
 \begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=\textwidth]{../figures/BOW_histogram.png}
@@ -232,12 +227,8 @@ We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{hist
 	\caption{bi-LR model}
 \end{subfigure}
 \caption{Perplexity ratio histograms for both LR-models. The dotted black line corresponds to $\eta_\text{PP}=0.7$.}
+\label{histograms}
 \end{figure}
-
-
-
-
-
 
 
 \section{Conclusions}
@@ -265,15 +256,15 @@ We found $\eta_{\text{PP}}=0.7$ to perform best in both models; Figure~\ref{hist
 
 
 
-\subsection{Possible extension}
-Our results thus far suggest that the language produced by snarXiv may just be too artificial and constrained to put up much of a fight in the classification task.
-The naive Bayes classifier never mistakes a snarXiv paper for real, although it still accidentally flags a decent chunk of real papers as fake.
-We will continue this work with more sophisticated feature generation and classifiers to explore different methods and try to reduce the remaining error, but it is worth looking in other directions as well.
-
-In particular, if snarXiv cannot produce abstracts that are convincing to our classifier, what can?
-The field of generative adversarial networks has become prominent recently, as reviewed in \citet{creswell2018generative}, and we are considering extending our project in this direction.
-The aim would be to produce, effectively, a next-generation snarXiv that achieves a meaningful error rate against its discriminating counterpart.
-Several sources note that GANs are not naturally suited to contexts with discrete data streams, so this may prove unworkable, but is one direction to pursue if our original plan leads to shallow results.
+%\subsection{Possible extension}
+%Our results thus far suggest that the language produced by snarXiv may just be too artificial and constrained to put up much of a fight in the classification task.
+%The naive Bayes classifier never mistakes a snarXiv paper for real, although it still accidentally flags a decent chunk of real papers as fake.
+%We will continue this work with more sophisticated feature generation and classifiers to explore different methods and try to reduce the remaining error, but it is worth looking in other directions as well.
+%
+%In particular, if snarXiv cannot produce abstracts that are convincing to our classifier, what can?
+%The field of generative adversarial networks has become prominent recently, as reviewed in \citet{creswell2018generative}, and we are considering extending our project in this direction.
+%The aim would be to produce, effectively, a next-generation snarXiv that achieves a meaningful error rate against its discriminating counterpart.
+%Several sources note that GANs are not naturally suited to contexts with discrete data streams, so this may prove unworkable, but is one direction to pursue if our original plan leads to shallow results.
 
 
 
