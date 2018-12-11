@@ -145,6 +145,14 @@ wins = arxiv_wins+snarxiv_wins
 losses = arxiv_losses+snarxiv_losses
 accuracy = wins/(wins+losses)   # E_test = losses/(wins+losses)
 
+TPR = snarxiv_wins/(snarxiv_wins + snarxiv_losses)
+if arxiv_losses == 0:
+  FDR = 0
+else:
+  FDR = arxiv_losses/(arxiv_losses + snarxiv_wins)
+
+
 print('arXiv accuracy: %.3f (%i wins, %i losses)' %(arxiv_accuracy,arxiv_wins,arxiv_losses))
 print('snarXiv accuracy: %.3f (%i wins, %i losses)' %(snarxiv_accuracy,snarxiv_wins,snarxiv_losses))
-print('Accuracy: %.3f (%i wins, %i losses)' %(accuracy,wins,losses))
+print('TPR: %.3f  FDR: %.3f' %(TPR,FDR))
+print('Total accuracy: %.3f (%i wins, %i losses)' %(accuracy,wins,losses))
