@@ -5,7 +5,7 @@
 % before loading nips_2018
 
 % ready for submission
-\usepackage{nips_2018}
+\usepackage[final]{nips_2018}
 
 % to compile a preprint version, e.g., for submission to arXiv, add
 % add the [preprint] option:
@@ -78,8 +78,8 @@
 
 \begin{abstract}
 We attempt to construct classifiers that can accurately distinguish between real arXiv \texttt{hep-th} abstracts and fake abstracts generated from a context-free grammar by the program snarXiv\footnote{\url{http://davidsd.org/2010/03/the-snarxiv/}}.
-We study the bag-of-words and $n$-grams language models as well as several different classifiers: naive Bayes, likelihood-ratio, and tf-idf.
-We find the likelihood-ratio and tf-idf methods to perform extremely well, classifying abstracts correctly with nearly 100\% accuracy. All code available at \url{https://github.com/kowashs/ml_project}. 
+We study the bag-of-words and $n$-grams language models under the naive Bayes and likelihood-ratio classifiers, as well as logistic regression applied to tf--idf-weighted feature vectors.
+We find the likelihood-ratio and tf--idf methods to perform extremely well, classifying abstracts correctly with nearly 100\% accuracy. All code available at \url{https://github.com/kowashs/ml_project}. 
 \end{abstract}
 
 
@@ -94,7 +94,7 @@ Simmons-Duffin created a browser game, ``arXiv vs. snarXiv,''\footnote{Now sadly
 After 750,000 guesses, the success rate was only 59\%; i.e., people mistakenly identified a randomly-generated snarXiv title/abstract as real 41\% of the time.
 This turns out to be a task that humans are remarkably (and amusingly) bad at, so we here investigate whether machines are any better.
 
-In \S\ref{sec:LMs} and \S\ref{sec:classifiers}, we discuss the principles of our text representation and classification schemes.
+In \S\ref{sec:n-grams}, \S\ref{sec:tfidf}, and \S\ref{sec:classifiers}, we discuss the principles of our text representation and classification schemes.
 \S\ref{sec:results} presents the results of parameter tuning and final classification accuracies.
 Details of implementation are collected in Appendix~\ref{app:details}.
 
@@ -108,8 +108,8 @@ Details of implementation are collected in Appendix~\ref{app:details}.
 
 
 
-\section{Language models} \label{sec:LMs}
-\subsection{\texorpdfstring{$n$-grams}{n-grams}} \label{sec:n-grams}
+
+\section{\texorpdfstring{$n$-grams}{n-grams}} \label{sec:n-grams}
 Assume that each abstract $X$ has a probability $\P(X|Y)$ of being from source $Y\in\{-1,1\}$, where $Y=1$ represents the label ``snarXiv'' and  $Y=-1$ represents the label ``arXiv.''
 Suppose $X=(w_1,w_2,\ldots,w_N)$ is an abstract containing $N$ words $\{w_i\}_{i=1}^N$, and let $w_i^{i+k}$ denote the word sequence $(w_i,w_{i+1},\ldots, w_{i+k})$.
 The $n$-grams language model approximates $\P(X|Y)$ as
@@ -147,7 +147,7 @@ In practice, we use the logs of the classification conditions given below in Sec
 
 
 
-\subsection{tf--idf}
+\section{tf--idf} \label{sec:tfidf}
 The family of $n$-gram models can be used to produce term probabilities for naive Bayes or likelihood-ratio testing, but they also induce perfectly good $\tfrac{V!}{(V-n)!}$-dimensional vector representations of documents, where each entry records the occurrence of a given $n$-gram in the document.
 These vectors are large, but fairly sparse, and make rudimentary features for regression or clustering algorithms. We enhance this model using the term-frequency--inverse-document-frequency (tf--idf) scheme as described in \citet[ch. 6]{jurafsky2014speech}.
 
@@ -351,7 +351,7 @@ We decided not to include the 13,960 words that only appeared once since they se
 This pruning can be thought of as a feature-processing step.
 
 
-\subsection{\texorpdfstring{$n$-grams}{n-grams}}
+\subsection{\texorpdfstring{$n$-grams details}{n-grams details}}
 It is fairly common for a word to appear in the test set that is not in the vocabulary.
 When this happens, we change the word to a special token \texttt{<UNK>}.
 We then treat \texttt{<UNK>} as we would any other word when counting $n$-gram occurrences $C_Y(\cdot)$.
