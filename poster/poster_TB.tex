@@ -106,7 +106,7 @@
 
 \setlength{\fboxsep}{0mm}
 \headerbox{Results}{name=results,column=3,row=0, span=2}{
-\textbf{\underline{Naive bayes classifier}}: $\text{TCA} \approx 77\%$ ($\text{TPR} = 100\%$, $\text{FDR} \approx 32\%$)
+\textbf{\underline{Naive bayes classifier}}: $\text{TCA} \approx 99.94\%$ ($\text{TPR} \approx 100\%$, $\text{FDR} \approx 99.88\%$)
 \\
 \textbf{\underline{Likelihood-ratio test}:} $\text{TCA} \approx 99.98\%$ for $\eta_\text{PP}=1.4$
 	\vspace{-1em}
@@ -137,9 +137,9 @@
 \\
 
 For each model, we trained on 1,000 arXiv + 1,000 snarXiv abstracts and tested on 4,000 arXiv + 4,000 snarXiv abstracts, using a vocabulary of 15,315 unique words that appeared at least twice in a separate training corpus of 12,000 arXiv + 12,000 snarXiv abstracts.
-The naive Bayes classifier (using bag-of-words) is by far the worst performer, having a total classification accuracy (TCA) of just 77\% due to its high propensity for false positives.
-The likelihood-ratio test (for both bag-of-words and bigrams) and logistic regression (on tf--idf) are both able to almost completely resolve this issue, each sporting a TCA greater than $99.95\%$.
-Comparing the bag-of-words and bigram models in the likelihood-ratio test, we find that both of the resulting classifiers are able to achieve a TCA of at least $99.98\%$ for appropriate choices of $\eta_\text{PP}$, the range of $\eta_\text{PP}$ which achieve these accuracies is significantly wider in the bigram model; in other words, adding context to words makes the contrast between arXiv and snarXiv abstracts much more pronounced.
+The naive Bayes classifier (using bag-of-words) is the worst performer, but still boasts a total classification accuracy (TCA) of 99.4\%, with the only misclassifications being false positives (incorrectly labeled an arXiv as being snarXiv).
+The likelihood-ratio test (for both bag-of-words and bigrams) and logistic regression (on tf--idf) perform even better, each sporting a TCA greater than $99.95\%$.
+Comparing the bag-of-words and bigram models in the likelihood-ratio test, we find that while both of the resulting classifiers are able to achieve a TCA of at least $99.98\%$ for appropriate choices of $\eta_\text{PP}$, the range of $\eta_\text{PP}$ which achieve these accuracies is significantly wider in the bigram model; in other words, adding context to words makes the contrast between arXiv and snarXiv abstracts much more pronounced.
 }
 \setlength{\fboxsep}{1mm}
 

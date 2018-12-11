@@ -84,12 +84,16 @@ def classify(abstract, P_dict,N_arxiv_words,N_snarxiv_words,P_arxiv, vocab):
     else:
       log_P_abstract_source += np.log(np.array([1/(N_arxiv_words+V),1/(N_snarxiv_words+V)]))
 
-  P_abstract_source = np.exp(log_P_abstract_source)
+  #P_abstract_source = np.exp(log_P_abstract_source)
   # Compare P(arxiv|abstract) with P(snarxiv|abstract)
-  if P_arxiv*P_abstract_source[0] > (1.-P_arxiv)*P_abstract_source[1]:
+  if np.log(P_arxiv)+log_P_abstract_source[0] > np.log(1.-P_arxiv)+log_P_abstract_source[1]:
     return 'arxiv'
   else:
     return 'snarxiv'
+  # if P_arxiv*P_abstract_source[0] > (1.-P_arxiv)*P_abstract_source[1]:
+  #   return 'arxiv'
+  # else:
+  #   return 'snarxiv'
 
 
 ###############################################################################
