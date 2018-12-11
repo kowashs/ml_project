@@ -100,26 +100,45 @@
 		\hat{\P}(X|Y) \equiv \prod_{i=1}^N \hat{\P}(w_i | w_{i-n+1}^{i-1}, Y) \equiv \frac{C_Y(w_{i-n+1}^i)+1}{C_Y(w_{i-n+1}^{i-1}) + V},
 	\end{align*}
 	%
-	where $C_Y(w_{i-n+1}^i)$ is the number of times that $n$-gram occurs in the corpus for class $Y$ and $V$ is the size of our vocabulary. This definition inherently gives low weights to longer abstracts, so for classification we compare a geometric mean, the perplexity:
-	\vspace{-.5em}
-	\begin{align*}
-		PP(X|Y) &\equiv -\frac{1}{N} \sum_{i=1}^N \log \hat{\P}(w_i|w_{i-n+1}^{i-1},Y).
-	\end{align*}
+	where $C_Y(w_{i-n+1}^i)$ is the number of times that $n$-gram occurs in the corpus for class $Y$ and $V$ is the size of our vocabulary. In our experiments we studied 1-grams (known as the bag-of-words model) and 2-grams.
 	}
 
 
-\headerbox{Likelihood-ratio classification}{name=lr,column=1,row=.38}{
-	We classified documents based on $n$-gram frequencies in two ways: in \emph{naive Bayes classification}, we classify according to
+\headerbox{Naive Bayes}{name=nb,column=0,row=.84}{
+	The simplest classifier based on $n$-gram frequencies sorts a document into whichever class has a higher posterior probability based on our estimate:
 	\vspace{-.5em}
 	\begin{align*}
-		\hat{Y} &= \argmax \P(Y) \hat{\P}(X|Y),
+		\hat{Y} &= \argmax_{Y\in\{-1,1\}} \P(Y) \hat{\P}(X|Y),
 	\end{align*}
 	%
 	where $\P(Y)$ is the fraction of training abstracts in class $Y$.
 }	
 
+\headerbox{Likelihood-ratio test}{name=lr,column=1,row=.38}{
+	The LR test improves upon naive Bayes by giving us a hyperparameter $\eta$ to adjust the sensitivity of the test. Given the ratio $\Lambda(X) \equiv \hat{P}(X|Y=1)/\hat{P}(X|Y=-1)$, the classifier $\delta^\ast_{LR}$ chooses class 1 (snarXiv) with probabilities
+	%
+	\begin{align*}
+		\P(\delta^\ast_{LR}(X) = 1) &= \begin{cases}
+									   	1, & \Lambda(X) > \eta\\
+									   	1/2, &\Lambda(X) = \eta\\
+									   	0, &\Lambda(X) < \eta\\
+									   \end{cases}.
+	\end{align*}
+	%
+	This reduces to the previous case when $\eta$ is the ratio of arXiv abstracts to snarXiv in the training set.
+}
 
-\headerbox{References}{name=refs,column=0,row=0.9,span=2}{}
+
+\headerbox{tf--idf}{name=tfidf, column=1, row=.64}{
+	Another approach is to map documents into a continuous vector space and apply a method such as logistic regression to classify. We used a tf--idf method, where each document gets a vector $d$ with an entry $d_i$ for each word in the vocabulary, weighted by
+	%
+	\begin{align*}
+		d_i &= \mathrm{tf}_{i,d} \cdot \mathrm{idf}_i
+	\end{align*}
+}
+
+
+\headerbox{References}{name=refs,column=2,row=0.9,span=1}{}
 
 
 
@@ -133,6 +152,9 @@
 
 \setlength{\fboxsep}{0mm}
 \headerbox{Results}{name=results,column=2,row=0, span=1}{
+\textbf{\underline{Naive bayes classifier}}: $\text{TCA} \approx 77\%$ ($\text{TPR} = 100\%$, $\text{FDR} \approx 32\%$)
+\\
+\textbf{\underline{Likelihood-ratio test}:} $\text{TCA} \approx 99.98\%$ for $\eta_\text{PP}=1.4$
 	\vspace{-1em}
 	\begin{figure}[H]
 		\centering
@@ -156,6 +178,16 @@
 			\includegraphics[width=\textwidth]{figures/bi_TPR_FDR.pdf}
 		\end{subfigure}}
 	\end{figure}
+%
+\textbf{\underline{tf--idf + logistic regression}:} $\text{TCA} \approx 99.96\%$ for $\lambda=2.5\times10^{-8}$
+\\
+
+For each model, we trained on 1,000 arXiv + 1,000 snarXiv abstracts and tested on 4,000 arXiv + 4,000 snarXiv abstracts, using a vocabulary of 15,315 unique words that appeared at least twice in a separate training corpus of 12,000 arXiv + 12,000 snarXiv abstracts.
+
+The naive Bayes classifier (using bag-of-words) is by far the worst performer, having a total classification accuracy (TCA) of just 77\% due to its high propensity for false positives.
+The likelihood-ratio test (for both bag-of-words and bigrams) and logistic regression (on tf--idf) are both able to almost completely resolve this issue, each sporting a TCA greater than $99.95\%$.
+
+Comparing the bag-of-words and bigram models in the likelihood-ratio test, we find that both of the resulting classifiers are able to achieve a TCA of at least $99.98\%$ for appropriate choices of $\eta_\text{PP}$, the range of $\eta_\text{PP}$ which achieve these accuracies is significantly wider in the bigram model; in other words, adding context to words makes the contrast between arXiv and snarXiv abstracts much more pronounced.
 }
 \setlength{\fboxsep}{1mm}
 
