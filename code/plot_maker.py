@@ -10,10 +10,10 @@ matplotlib.rcParams["text.usetex"] = True
 matplotlib.rcParams["text.latex.preamble"].append(r'\usepackage{xfrac}')
 
 # Choose which plots to make
-make_hist_BoW = True
+make_hist_BoW = False
 make_TPR_FDR_BoW = True
 
-make_hist_bi = True
+make_hist_bi = False
 make_TPR_FDR_bi = True
 
 # Load necessary data
@@ -112,14 +112,14 @@ if make_TPR_FDR_BoW == True:
   # Make TPR vs. FDR plot
   fig, ax = plt.subplots()
 
-  plt.plot(FDR_list[:i_low],TPR_list[:i_low],'c.', markersize=10)
-  plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx', markersize=10)
-  plt.plot(FDR_list[i_high+1:],TPR_list[i_high+1:],'b.', markersize=10)
+  plt.plot(FDR_list[:i_low],TPR_list[:i_low],'c.', markersize=12)
+  plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx', markersize=12)
+  plt.plot(FDR_list[i_high+1:],TPR_list[i_high+1:],'b.', markersize=12)
 
   plt.legend(['$\eta_{\\text{PP}}<$'+str(perfect_eta_min), str(perfect_eta_min)+'$\leq\eta_{\\text{PP}}\leq$'+str(perfect_eta_max),
    '$\eta_{\\text{PP}}>$'+str(perfect_eta_max)], fontsize=14, loc='lower right')
 
-  plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx', markersize=10)
+  plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx', markersize=12)
 
   ax.set_xlim((-.025,0.525)); ax.set_ylim((-.05,1.05))
 
@@ -229,14 +229,14 @@ if make_TPR_FDR_bi == True:
   # Make TPR vs. FDR plot
   fig, ax = plt.subplots()
 
-  plt.plot(FDR_list[:i_low],TPR_list[:i_low],'c.', markersize=10)
-  plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx', markersize=10)
-  plt.plot(FDR_list[i_high+1:],TPR_list[i_high+1:],'b.', markersize=10)
+  plt.plot(FDR_list[:i_low],TPR_list[:i_low],'c.', markersize=12)
+  plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx', markersize=12)
+  plt.plot(FDR_list[i_high+1:],TPR_list[i_high+1:],'b.', markersize=12)
 
   plt.legend(['$\eta_{\\text{PP}}<$'+str(perfect_eta_min), str(perfect_eta_min)+'$\leq\eta_{\\text{PP}}\leq$'+str(perfect_eta_max),
    '$\eta_{\\text{PP}}>$'+str(perfect_eta_max)], fontsize=14, loc='lower right')
 
-  plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx', markersize=10)
+  plt.plot(FDR_list[i_low:i_high+1],TPR_list[i_low:i_high+1],'rx', markersize=12)
 
   ax.set_xlim((-.025,0.525))
   #ax.set_xlim((-.05,0.55))
