@@ -50,6 +50,7 @@ Thumbs.db
 *.synctex.gz
 *.bbl
 *.blg
+*.pdf
 
 slurm*
 data/*
