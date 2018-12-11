@@ -20,6 +20,12 @@
 \definecolor{bg}{RGB}{215, 134, 57}
 
 
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+
+
 
 \setlist{nolistsep} % more compact spacing between environments
 \setlist[itemize]{leftmargin=*} % nice margins for itemize ...
@@ -45,8 +51,8 @@
 	\Huge arXiv vs. snarXiv}{
 	\Large Tyler Blanton and Sam Kowash\\University of Washington, Department of Physics}{\includegraphics[height=.75in]{figures/uw_block_purple.eps}}
 
-\headerbox{Background}{name=background,column=0,row=0,span=2}{
-	The arXiv is a popular e-print repository for publications in physics, astronomy, and other quantitative sciences. It hosts nearly 1.5 million papers, of which $\sim$120,000 are in theoretical high-energy physics (\texttt{hep-th}). Physicist David Simmons-Duffin developed a program known as the snarXiv, which procedurally generates abstracts in the style of \texttt{hep-th} from a context-free grammar.
+\headerbox{Background}{name=background,column=0,row=0,span=3}{
+	The arXiv is a popular e-print repository for publications in physics, astronomy, and other quantitative sciences. It hosts nearly 1.5 million papers, of which $\sim$120,000 are in theoretical high-energy physics (\texttt{hep-th}). Physicist David {Simmons-Duffin} developed a program known as the snarXiv, which procedurally generates abstracts in the style of \texttt{hep-th} from a context-free grammar.
 
 	Humans (even physicists) have surprising difficulty determining whether a given abstract is from the arXiv or the snarXiv. Over 750,000 guesses collected through an online sorting game, players succeeded at picking the genuine paper from a pair only 59\% of the time. Try it for yourself below!\vspace{.25\baselineskip}
 
@@ -57,7 +63,6 @@
 
 		\footnotesize
 		In the 20th century, a fair amount of work was done demystifying QED in the presence of a stack of canonical co-isotropic branes. In this paper, we make contact with analyzing heterotic strings, consequently reconstructing perturbation theory on $\mathbb{C}^n$, and classify anomalous dimensions in loop models with sleptons. Our computation of the solution of magnetic dualities in models of hadrons provides a certain notion of perturbation theory (taking into account cosmic rays at $\Lambda_\mathrm{QCD}$). Our results prove that decay constants turn out to be equivalent to an instanton at the Planck scale. Finally, we establish that sleptons can be brought to bear in reformulating heavy ions.
-		\vspace{\baselineskip}
 	\end{minipage}}
 	%
 	\fcolorbox{black}{white}{
@@ -75,10 +80,14 @@
 
 
 
-\headerbox{$n$-gram model}{name=ngram,column=0,row=0.56,span=2}{%
-	One approach to text classification is to develop a \emph{language model}: an approximate probability distribution over word sequences or, in this case, a distribution corresponding to each class. Generically, for a document $X$ consisting of the word sequence $\{w_i\}_{i=1}^n$,
-}
-
+\headerbox{$n$-gram model}{name=ngram,column=0,row=0.41,span=2}{%
+	One approach to text classification is to develop a \emph{language model}: an approximate probability distribution over word sequences or, in this case, a distribution corresponding to each class. Given a class $Y \in \{-1,1\}$ (with the negative sign referring to arXiv and the positive to snarXiv) and a document $X$ consisting of words $\{w_i\}_{i=1}^N$, we want to characterize
+	%
+	\begin{align*}
+		\P(X | Y) &= \prod_{i=1}^N \P(w_i|w_1^{i-1}, Y),
+	\end{align*}
+	%
+	where $w_1^{i-1}$ is the sequence of the first $i-1$ words.}
 
 
 % \headerbox{Naive Bayes and likelihood-ratio classification}{name=lr,column=1,row=.8}{
@@ -96,7 +105,7 @@
 
 
 \setlength{\fboxsep}{0mm}
-\headerbox{Results}{name=results,column=2,row=0, span=3}{
+\headerbox{Results}{name=results,column=3,row=0, span=2}{
 	\vspace{-1em}
 	\begin{figure}[H]
 		\centering
@@ -109,6 +118,7 @@
 			\centering
 			\includegraphics[width=\textwidth]{figures/BoW_TPR_FDR.pdf}
 		\end{subfigure}}
+
 		\fbox{\begin{subfigure}[t]{.49\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{figures/bi_histogram.pdf}
