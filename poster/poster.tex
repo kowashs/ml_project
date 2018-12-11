@@ -1,16 +1,19 @@
 \documentclass[paperwidth=40in,paperheight=32in,margin=1in,fontscale=0.33]{baposter}
 \usepackage{amsmath}
 \usepackage{amssymb}
+
+% \usepackage{natbib}
 \usepackage{enumitem}
 \usepackage{subcaption}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage[numbers]{natbib}
+\usepackage{bibentry}
 \usepackage{xcolor}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage[font=normalsize,labelfont=bf]{caption}
-
+\usepackage{hyperref}
 
 % \frenchspacing
 
@@ -30,6 +33,8 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 
 \DeclareMathOperator{\tr}{tr}
+
+\nobibliography*
 
 
 
@@ -52,15 +57,14 @@
     headerheight=0.11\textheight, %
     headershape=rounded, %
     %% other
-    columns=3,
-    grid=true}{}{
+    columns=3}{}{
 	\Huge arXiv vs. snarXiv}{
 	\Large Tyler Blanton and Sam Kowash\\University of Washington, Department of Physics}{\includegraphics[height=.75in]{figures/uw_block_purple.eps}}
 
 \headerbox{Background}{name=background,column=0,row=0,span=2}{
 	The arXiv is a popular e-print repository for publications in physics, astronomy, and other quantitative sciences. It hosts nearly 1.5 million papers, of which $\sim$120,000 are in theoretical high-energy physics (\texttt{hep-th}). Physicist David {Simmons-Duffin} developed a program known as the snarXiv, which procedurally generates abstracts in the style of \texttt{hep-th} from a context-free grammar.
 
-	Humans (even physicists) have surprising difficulty determining whether a given abstract is from the arXiv or the snarXiv. Over 750,000 guesses collected through an online sorting game, players succeeded at picking the genuine paper from a pair only 59\% of the time. Try it for yourself below!\vspace{.25\baselineskip}
+	Humans (even physicists) have surprising difficulty determining whether a given abstract is from the arXiv or the snarXiv. Across 750,000 guesses collected through an online sorting game, players succeeded at picking the genuine paper from a pair only 59\% of the time. Try it for yourself below! \vspace{.25\baselineskip}
 
 
 	\fcolorbox{black}{white}{
@@ -82,7 +86,7 @@
 	}
 
 	\vspace{0.25\baselineskip}
-	We explored computational approaches to this classification problem to investigate whether its difficulty stems from snarXiv's genius, or humans' bewilderment in the face of unfamiliar jargon.
+	We explored computational approaches to this classification problem to investigate whether its difficulty stems from snarXiv's genius, or humans' bewilderment in the face of unfamiliar jargon. {\small(Explore snarXiv at: \url{https://github.com/davidsd/snarxiv}.)}
 }
 
 
@@ -130,31 +134,34 @@
 
 
 \headerbox{tf--idf}{name=tfidf, column=1, row=.64}{
-	Another approach is to map documents into a continuous vector space and apply a method such as logistic regression to classify. We used a tf--idf method, where each document gets a vector $d$ with an entry $d_i$ for each word in the vocabulary, weighted by
+	Another approach is to map documents into a continuous vector space and apply typical statistical learning methods. We used a tf--idf method, where each document gets a vector $d$ with an entry $d_i$ for each word in the vocabulary, weighted by
 	%
 	\begin{align*}
-		d_i &= \mathrm{tf}_{i,d} \cdot \mathrm{idf}_i
+		d_i &= \mathrm{tf}_{i,d} \cdot \mathrm{idf}_i,
 	\end{align*}
+	%
+	where we define
+	%
+	\begin{align*}
+		  \mathrm{idf}_i &\equiv \log_{10} \frac{N+1}{\mathrm{df}_i + 1}, &
+		  \mathrm{tf}_{i,d} &\equiv \begin{cases}
+                         1 + \log_{10}C_{i,d} &:\quad C_{i,d} > 0\\
+                         0 &:\quad\text{else}
+                       \end{cases},
+    \end{align*}
+    %
+    in which $C_{i,d}$ is the number of times $w_i$ appears in the document and $\mathrm{df}_i$ is the number of documents containing $w_i$. This weighting scheme is designed to focus on words which are less common in the training set, and ignore words like ``the'' and ``of'' which lack discriminating power. We used these vectors as features in an $L^2$-regularized logistic regression to classify abstracts.
 }
 
-
-\headerbox{References}{name=refs,column=2,row=0.9,span=1}{}
-
-
-
-
-
-% \headerbox{tf--idf}{name=tfidf,column=1,row=0.0}{%
-% }
 
 
 
 
 \setlength{\fboxsep}{0mm}
 \headerbox{Results}{name=results,column=2,row=0, span=1}{
-\textbf{\underline{Naive bayes classifier}}: $\text{TCA} \approx 77\%$ ($\text{TPR} = 100\%$, $\text{FDR} \approx 32\%$)
-\\
-\textbf{\underline{Likelihood-ratio test}:} $\text{TCA} \approx 99.98\%$ for $\eta_\text{PP}=1.4$
+{\small\textbf{\underline{Naive Bayes classifier}}: $\text{TCA} \approx 99.94\%$ ($\text{TPR} = 100\%$, $\text{FDR} \approx 32\%$)\\
+\textbf{\underline{tf--idf + logistic regression}:} $\text{TCA} \approx 99.96\%$ for $\lambda=2.5\times10^{-8}$\\
+\textbf{\underline{Likelihood-ratio test}:} $\text{TCA} \approx 99.98\%$ for $\eta_\text{PP}=1.4$}
 	\vspace{-1em}
 	\begin{figure}[H]
 		\centering
@@ -179,25 +186,23 @@
 		\end{subfigure}}
 	\end{figure}
 %
-\textbf{\underline{tf--idf + logistic regression}:} $\text{TCA} \approx 99.96\%$ for $\lambda=2.5\times10^{-8}$
-\\
+For each model, we trained on 1,000 abstracts of each set and tested on 4,000 of each, using a vocabulary of 15,315 unique words that appeared at least twice in a separate training corpus of 12,000 abstracts from each set.
+The naive Bayes classifier (using bag-of-words) is the worst performer, but still boasts a total classification accuracy (TCA) of 99.4\%, with the only misclassifications being false positives (arXiv mistaken for snarXiv).
 
-For each model, we trained on 1,000 arXiv + 1,000 snarXiv abstracts and tested on 4,000 arXiv + 4,000 snarXiv abstracts, using a vocabulary of 15,315 unique words that appeared at least twice in a separate training corpus of 12,000 arXiv + 12,000 snarXiv abstracts.
-
-The naive Bayes classifier (using bag-of-words) is by far the worst performer, having a total classification accuracy (TCA) of just 77\% due to its high propensity for false positives.
-The likelihood-ratio test (for both bag-of-words and bigrams) and logistic regression (on tf--idf) are both able to almost completely resolve this issue, each sporting a TCA greater than $99.95\%$.
-
-Comparing the bag-of-words and bigram models in the likelihood-ratio test, we find that both of the resulting classifiers are able to achieve a TCA of at least $99.98\%$ for appropriate choices of $\eta_\text{PP}$, the range of $\eta_\text{PP}$ which achieve these accuracies is significantly wider in the bigram model; in other words, adding context to words makes the contrast between arXiv and snarXiv abstracts much more pronounced.
+The likelihood-ratio test (for both bag-of-words and bigrams) and logistic regression (on tf--idf) perform even better, each sporting a TCA greater than $99.95\%$.
+Comparing the bag-of-words and bigram models in the likelihood-ratio test, we find that while both of the resulting classifiers are able to achieve a TCA of at least $99.98\%$ for appropriate choices of $\eta_\text{PP}$, the range of $\eta_\text{PP}$ which achieve these accuracies is significantly wider in the bigram model; in other words, adding context to words makes the contrast between arXiv and snarXiv abstracts much more pronounced.
 }
 \setlength{\fboxsep}{1mm}
 
 
 
-% \headerbox{Conclusions}{name=conclusions, column=1, row=.75}{
-	
-% }
+\headerbox{Conclusions}{name=conclusions, column=2, row=.762}{
+	Ultimately, we found that distinguishing arXiv from snarXiv is not just easier for computers, but \emph{trivial}. As we see in the histograms, the populations are statistically well-separated even in BoW analysis, but strikingly so when 2-grams introduce context. We expect this to sharpen with higher context, as the snarXiv produces long-range coherence only by random chance, and its juxtapositions of unrelated concepts will become more evident.
+	}
 
-
+\headerbox{References}{name=refs, column=2, row=.939}{
+	\bibentry{jurafsky2014speech}
+}
 
 
 
@@ -208,6 +213,10 @@ Comparing the bag-of-words and bigram models in the likelihood-ratio test, we fi
 % 	\bibliography{lag_paper_new}
 % 	\endgroup
 % }
-
+\nobibliography{references.bib}
+\bibliographystyle{plainnat}
 \end{poster}
+
+
+
 \end{document}
