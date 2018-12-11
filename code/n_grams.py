@@ -4,15 +4,8 @@ plt.switch_backend('agg')
 import api_get_abstracts as get_abstracts
 
 ###############################################################################
-# TO DO LIST
-############
-# 1) Add special start/end characters to sentences (e.g., <s>,<e>) in parser
-# 2) Manage zeros in dictionaries better
-#    -- Fix vocabulary before training?
-
-
-###############################################################################
-# Create Neyman-Pearson classifier using n-grams
+# Create likelihood-ratio (Neyman-Pearson) classifier using n-grams
+# (currently the train/classify functions only works for bigrams)
 ###############################################################################
 
 # Create (or add to existing) n_grams dictionary for given (parsed) abstract
@@ -79,65 +72,69 @@ def train(arxiv_abstracts, snarxiv_abstracts, vocab):
 
 
 # Classify a test abstract as arxiv or snarxiv using P_dict from train
-def classify(abstract, P_dict_2,dict_1, eta,gamma, vocab):
+def classify(abstract, P_dict_2,dict_1, eta_PP,gamma, vocab):
   # Compute [P(abstract|arxiv), P(abstract|snarxiv)] using bag-of-words model
-  # Use log[P(abstract|arxiv)/P(abstract|snarxiv)] to classify
+  # Use log[PP(abstract|arxiv)/PP(abstract|snarxiv)] to classify
   V = len(vocab)
   for i,word in enumerate(abstract):
     if word not in vocab:
       abstract[i] = '<UNK>'
   #N_bigrams = max(len(abstract)-1,1)
-  log_arx2snarx_ratio = 0
+  log_PP_arx2snarx = 0
   for i in range(len(abstract)-1):
     bigram = tuple(abstract[i:i+2])
     if bigram in P_dict_2:
-      log_arx2snarx_ratio += np.log(P_dict_2[bigram][0])-np.log(P_dict_2[bigram][1])
+      log_PP_arx2snarx += np.log(P_dict_2[bigram][1])-np.log(P_dict_2[bigram][0])
     elif bigram[0] in dict_1:
       w1 = bigram[0]
-      log_arx2snarx_ratio += np.log((dict_1[w1][1]+V)/(dict_1[w1][0]+V))
+      log_PP_arx2snarx += np.log((dict_1[w1][0]+V)/(dict_1[w1][1]+V))
     #else: add log(V/V) = 0
-  log_arx2snarx_ratio = log_arx2snarx_ratio/len(abstract)  # log(perplexities ratio)
+  log_PP_arx2snarx = log_PP_arx2snarx/len(abstract)  # log(perplexities ratio)
 
-
-  log_eta = np.log(eta)
-  if log_arx2snarx_ratio > log_eta:
-    return 'arxiv', log_arx2snarx_ratio
-  elif log_arx2snarx_ratio < log_eta:
-    return 'snarxiv', log_arx2snarx_ratio
-  elif log_arx2snarx_ratio == log_eta:
+  log_eta = np.log(eta_PP)
+  if log_PP_arx2snarx > log_eta:
+    return 'snarxiv', log_PP_arx2snarx
+  elif log_PP_arx2snarx < log_eta:
+    return 'arxiv', log_PP_arx2snarx
+  elif log_PP_arx2snarx == log_eta:
     if np.random.rand() <= gamma:
-      return 'arxiv', log_arx2snarx_ratio
+      return 'snarxiv', log_PP_arx2snarx
     else:
-      return 'snarxiv', log_arx2snarx_ratio
+      return 'arxiv', log_PP_arx2snarx
 
 
 ###############################################################################
 # Apply to test data
 ###############################################################################
-# Choose how many abstracts to get (train+test)
-N_arxiv = 1000	    # must be <2000
-N_snarxiv = 1000
+# Choose which data sets to save to file and/or plot
+make_TPR_FDR_plot = False
+save_TPR_FDR_data = False
+
+make_hist_plot = True
+save_hist_data = True
+
+# Choose how many abstracts to get
+N_arxiv_train = 1000
+N_snarxiv_train = 1000
+
+N_arxiv_test = 1000
+N_snarxiv_test = 1000
+
+N_arxiv = N_arxiv_train + N_arxiv_test
+N_snarxiv = N_snarxiv_train + N_snarxiv_test
 
 
-# Choose N-P parameters eta & gamma
-#eta_list = np.round(np.linspace(0.01,5,100),2)
-eta_list = [0.7]
-#eta = 0.5
+# Choose LR parameters eta & gamma
+#eta_list = sorted([0.7,np.round(10**np.arange(-0.5,0.5,0.1),2)])
+eta_list = [1.4]
 gamma = 0.5
 
-# Get abstracts
-# arxiv_abstracts = get_abstracts.get_arxiv(arxiv_start, N_arxiv)
-
-
-# Get abstracts from pre-downloaded data
-arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
-print(f"Loaded {N_arxiv} arXiv abstracts")
-
+# Generate new snarxiv abstracts
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
-# Split abstracts into train and test sets
-N_arxiv_train = int(round(0.1*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
-N_snarxiv_train = int(round(0.1*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
+# Get arxiv abstracts from pre-downloaded data
+arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
+print(f"Loaded {N_arxiv} arXiv abstracts")
 
 arxiv_train = arxiv_abstracts[:N_arxiv_train]
 arxiv_test = arxiv_abstracts[N_arxiv_train:]
@@ -152,8 +149,7 @@ vocab = np.load('big_vocab.npz')['vocab']
 P_dict_2, dict_1 = train(arxiv_train, snarxiv_train, vocab)
 
 # Apply to test data
-TPR_list = []
-FDR_list = []
+TPR_list = []; FDR_list = []
 for i in range(len(eta_list)):
   eta = eta_list[i]
   # Attempt to classify test abstracts & compute classification error
@@ -201,38 +197,54 @@ for i in range(len(eta_list)):
 i_best = np.argmax(np.array(TPR_list)-np.array(FDR_list))
 eta_best = eta_list[i_best]
 
-# Make TPR vs. FDR plot
-# plt.figure()
-# #plt.plot(FDR_list,TPR_list,'b.')
-# plt.plot(FDR_list[:i_best],TPR_list[:i_best],'b.')
-# plt.plot(FDR_list[i_best],TPR_list[i_best],'rx')
-# plt.plot(FDR_list[i_best+1:],TPR_list[i_best+1:],'g.')
-# plt.xlim((-.05,1.05)); plt.ylim((-.05,1.05))
-# plt.legend(['$\eta>$'+str(eta_best), '$\eta=$'+str(eta_best),
-#  '$\eta<$'+str(eta_best)],loc='lower right')
-# plt.xlabel('False Discovery Rate (FDR)')
-# plt.ylabel('True Positive Rate (TPR)')
-# plt.savefig('../figures/FDR_TPR_plot.png')
-# plt.close()
+
+if save_TPR_FDR_data == True:
+  # Save TPR & FDR data to file
+  np.savez('bi_TPR_FDR_data', eta_list=eta_list, TPR_list=TPR_list, FDR_list=FDR_list)
+
+if make_TPR_FDR_plot == True:
+  # Make TPR vs. FDR plot
+  if len(eta_list)==1:
+    print('Warning: only one eta_PP point in TPR vs. FDR plot')
+  # Make TPR vs. FDR plot
+  plt.figure()
+  #plt.plot(FDR_list,TPR_list,'b.')
+  plt.plot(FDR_list[:i_best],TPR_list[:i_best],'b.')
+  plt.plot(FDR_list[i_best],TPR_list[i_best],'rx')
+  plt.plot(FDR_list[i_best+1:],TPR_list[i_best+1:],'g.')
+  plt.xlim((-.05,1.05)); plt.ylim((-.05,1.05))
+  plt.legend(['$\eta>$'+str(eta_best), '$\eta=$'+str(eta_best),
+   '$\eta<$'+str(eta_best)],loc='lower right')
+  plt.xlabel('False Discovery Rate (FDR)')
+  plt.ylabel('True Positive Rate (TPR)')
+  plt.savefig('../figures/FDR_TPR_plot_bi.png')
+  plt.close()
 
 
-# Make histogram of P(X|arx)/P(X|snarx) (X is an arxiv/snarxiv abstract)
-my_bins = np.logspace(-1,1, 100)
+if save_hist_data==True:
+  # Save histogram data to file
+  if len(eta_list)!=1:
+    print('Warning: only data for last value of eta_PP in eta_list will be be used for histogram')
+  np.savez('bi_hist_data', snarx_list=log_ratio_snarxiv_list, arx_list=log_ratio_arxiv_list)
 
-plt.figure()
-plt.hist(np.exp(log_ratio_arxiv_list),bins=my_bins,alpha=0.5)
-plt.hist(np.exp(log_ratio_snarxiv_list),bins=my_bins,alpha=0.5)
-plt.gca().set_xscale("log")
-#plt.gca().set_yscale("log")
+if make_hist_plot==True:
+  # Make histogram of P(X|arx)/P(X|snarx) (X is an arxiv/snarxiv abstract)
+  my_bins = np.logspace(-1,1, 100)
 
-plt.legend([r'$X\in$arXiv',r'$X\in$snarXiv'])
-plt.xlabel('PP$(X|$snarXiv$)/$PP$(X|$arXiv$)$')
-plt.ylabel('Number of abstracts')
+  plt.figure()
+  plt.hist(np.exp(log_ratio_arxiv_list),bins=my_bins,alpha=0.5)
+  plt.hist(np.exp(log_ratio_snarxiv_list),bins=my_bins,alpha=0.5)
+  plt.gca().set_xscale("log")
+  #plt.gca().set_yscale("log")
 
-plt.axvline(0.7, color='k', linestyle='dashed', linewidth=1)
-_, max_ = plt.ylim()
-# plt.text(0.77,
-#          max_ - max_/10,
-#          r'$\eta_{$PP$}=0.7$')
-plt.savefig('../figures/bigram_histogram.png')
-plt.close()
+  plt.legend([r'$X\in\,$arXiv',r'$X\in\,$snarXiv'])
+  plt.xlabel('PP$(X|$arXiv$)/$PP$(X|$snarXiv$)$')
+  plt.ylabel('Number of abstracts')
+
+  plt.axvline(1.4, color='k', linestyle='dashed', linewidth=1)
+  _, max_ = plt.ylim()
+  # plt.text(0.77,
+  #          max_ - max_/10,
+  #          r'$\eta_{$PP$}=0.7$')
+  plt.savefig('../figures/bi_histogram.png')
+  plt.close()

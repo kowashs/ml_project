@@ -95,18 +95,22 @@ def classify(abstract, P_dict,N_arxiv_words,N_snarxiv_words,P_arxiv, vocab):
 ###############################################################################
 # Test model
 ###############################################################################
-# Choose how many abstracts to get (train+test)
-N_arxiv = 2000
-N_snarxiv = 2000
+# Choose how many abstracts to get
+N_arxiv_train = 1000
+N_snarxiv_train = 1000
 
-# Get abstracts
-arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
-print(f"Loaded {N_arxiv} arXiv abstracts")
+N_arxiv_test = 1000
+N_snarxiv_test = 1000
+
+N_arxiv = N_arxiv_train + N_arxiv_test
+N_snarxiv = N_snarxiv_train + N_snarxiv_test
+
+# Generate new snarxiv abstracts
 snarxiv_abstracts = get_abstracts.get_snarxiv(N_snarxiv)
 
-# Split abstracts into train and test sets
-N_arxiv_train = int(round(0.5*N_arxiv))       # N_arxiv_test = N_arxiv - N_arxiv_train
-N_snarxiv_train = int(round(0.5*N_snarxiv))   # N_snarxiv_test = N_snarxiv - N_snarxiv_train
+# Get arxiv abstracts from pre-downloaded data
+arxiv_abstracts = get_abstracts.get_stored_arxiv(N_arxiv)
+print(f"Loaded {N_arxiv} arXiv abstracts")
 
 arxiv_train = arxiv_abstracts[:N_arxiv_train]
 arxiv_test = arxiv_abstracts[N_arxiv_train:]
